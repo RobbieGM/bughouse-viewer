@@ -5287,13 +5287,13 @@ function drawControl(color, mode) {
   t +=
     '<input style="display: none;" type="button" name="bugzh" value="' +
     bz +
-    '" onclick="bugorzh(' +
+    '" onclick="bugOrZh(' +
     "'" +
     this.viewername +
     "'" +
     ')">';
   t +=
-    '<input type="button" value="Flip" onclick="flipboard(' +
+    '<input type="button" value="Flip" onclick="flipBoard(' +
     "'" +
     this.viewername +
     "'" +
