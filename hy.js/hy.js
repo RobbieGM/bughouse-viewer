@@ -32,7 +32,7 @@
 // 2015.03 piece.toLowerCase() for valid move fast patch now promoted pawn checking also
 
 // 2015.03.04 by SKAcz
-//    FromGameN(bpgntext,ord) ok now
+//    fromGameN(bpgntext,ord) ok now
 //    Interface for connecting to chat etc
 //    Board background,color HTML5, Pref allowing change pieces graphic (gif1 .. gif5)
 //    DisabledInput to not focusing and moving chessboard on smartphones and tablets by opening keyboard but holding screen to play or replay
@@ -50,33 +50,16 @@
 
 // 2001-04-21 v1.01 Fermy
 
-var viewerversion = "2023-06-14";
-
-function log(...args) {
-  // if there is a debugInfo element, it logs there,
-  // otherwise ddebugs into the console.log
-
-  if (document.getElementById("debugInfo")) {
-    let outstring = "";
-    for (const arg of args) {
-      outstring += JSON.stringify(arg) + " ";
-    }
-    document.getElementById("debugInfo").innerHTML += "\n" + outstring;
-  } else {
-    console.log(...args);
-  }
-}
-
 function saveNote(game_name_string) {
   // saves the note to the current positions cNote
 
   // saveNote is a global function, so we pass the game name to it in a string
-  let game = eval(game_name_string);
-  let v = eval("window.document." + game_name_string); // textarea doesnt have an id, it only has a name, so we must refer it with DOM objects
+  let game = globalThis[game_name_string];
+  let v = document[game_name_string]; // textarea doesnt have an id, it only has a name, so we must refer it with DOM objects
   game.BPGN[game.currentmove].cNote = v.comment.value; // the textarea is called "comment"
 }
 
-function Highlight(...indices) {
+function bxHighlight(...indices) {
   // saves highlighted squares
   // handles flips
   // attached to the boards (a and b)
@@ -84,20 +67,20 @@ function Highlight(...indices) {
   let brdId = this.boardname;
   let flip = this.flip;
 
-  this.unHighlightAll();
+  this.bxUnhighlightAll();
   this.highlightedSquares = [];
 
   for (let ind of indices) {
     this.highlightedSquares.push(ind);
 
     ind = flip ? 63 - ind : ind;
-    sqHighlight(brdId, ind, true);
+    bxSqHighlight(brdId, ind, true);
   }
 }
 
-function sqHighlight(bd, ind, highlight) {
+function bxSqHighlight(bd, ind, highlight) {
   // highlights or unhighlights a square
-  // don't call it direct, use the Highlight function
+  // don't call it direct, use the bxHighlight function
   //Wir: highlight or unhighlight a square; bd = board, ind = square index, highlight true=highlight, false=unhighlight
   var sqId = "tdsquare" + bd + String(ind);
   var lobj = document.getElementById(sqId).style.backgroundImage;
@@ -111,17 +94,17 @@ function sqHighlight(bd, ind, highlight) {
   document.getElementById(sqId).style.backgroundImage = lobj;
 }
 
-function unHighlightAll() {
+function bxUnhighlightAll() {
   let brdId = this.boardname;
 
   for (ind = 0; ind <= 63; ind++) {
-    sqHighlight(brdId, ind, false);
+    bxSqHighlight(brdId, ind, false);
   }
 
   this.highlightedSquares = [];
 }
 
-function setCoordinates() {
+function bxSetCoordinates() {
   // sets the coordinates for a board
   // attached to a and b
 
@@ -139,14 +122,7 @@ function setCoordinates() {
   }
 }
 
-function debug() {
-  var tmp =
-    '<form name="debug"><p><textarea name="shit" value="" rows="5" cols="70"></textarea></p></form>';
-  document.writeln(tmp);
-}
-
-function Init() {
-  //debug();
+function init() {
   //Defaults that one may want to change.
   DEFAULT_BSQ_COL = "#808080"; //'#A28964';
   DEFAULT_WSQ_COL = "#E4E4E4"; //'#DDC7AC'; '#EEC8B0';
@@ -335,7 +311,7 @@ function Init() {
   BTELL60 = "";
 }
 
-function readfile(viewer, file) {
+function readFile(viewer, file) {
   BPGN_FILE_NAME[BPGN_FILE_NAME.length] = file;
   BPGN_FILE_VIEWER[BPGN_FILE_VIEWER.length] = viewer;
   if (!READ_INTERVAL) {
@@ -343,19 +319,7 @@ function readfile(viewer, file) {
   }
 }
 
-function setvar(text) {
-  var i;
-  var n = BPGN_FILE_VIEWER.length;
-  var viewer = BPGN_FILE_VIEWER[0];
-  for (i = 0; i < n - 1; i++) BPGN_FILE_VIEWER[i] = BPGN_FILE_VIEWER[i - 1];
-  BPGN_FILE_VIEWER[n - 1] = false;
-  BPGN_FILE_VIEWER.length = n - 1;
-  var v = eval(viewer);
-  v.reloadgame(text, "", "");
-  READ_WINDOW.close();
-}
-
-function generatesavehtml() {
+function generateSaveHtml() {
   return `<html>
    <head>
       <title>Save BPGN</title>
@@ -365,7 +329,7 @@ function generatesavehtml() {
       <form name="saveform">
          <p><textarea id="bpgntextarea" name="bpgn" rows="10" cols="80"></textarea></p>
          <p>
-         ${GenerateSaveTextFile()}
+         ${generateSaveTextFile()}
          </p>
          <p><strong>BFEN A:</strong><input type="text" size="70" name="bfena"></p>
          <p><strong>BFEN B:</strong><input type="text" size="70" name="bfenb"></p>
@@ -378,7 +342,7 @@ function generatesavehtml() {
 </html>`;
 }
 
-function GenerateDownloadLink(fiddownloadlink, contents, file_name, mime_type) {
+function generateDownloadLink(fiddownloadlink, contents, file_name, mime_type) {
   var a = document.getElementById(fiddownloadlink);
   mime_type = mime_type || "application/octet-stream"; // text/html, image/png, et c
   if (file_name) a.setAttribute("download", file_name);
@@ -386,7 +350,7 @@ function GenerateDownloadLink(fiddownloadlink, contents, file_name, mime_type) {
   a.style.display = "inline";
 }
 
-function ActDateYYYYMMDDHHMMSS() {
+function actDateYYYYMMDDHHMMSS() {
   var d = new Date();
   var s = "";
   s +=
@@ -399,12 +363,12 @@ function ActDateYYYYMMDDHHMMSS() {
   return s;
 }
 
-function GenerateSaveTextFile() {
+function generateSaveTextFile() {
   var tmp = "";
 
   tmp += "<SCRIPT>";
   tmp +=
-    "function GenerateDownloadLink(fiddownloadlink, contents, file_name, mime_type)";
+    "function generateDownloadLink(fiddownloadlink, contents, file_name, mime_type)";
   tmp += "{";
   tmp += "  var a = document.getElementById(fiddownloadlink);";
   tmp += "  mime_type = mime_type || 'application/octet-stream';";
@@ -415,8 +379,8 @@ function GenerateSaveTextFile() {
   tmp += "</SCRIPT>";
 
   tmp +=
-    "<input type=\"button\" value=\"Generate download link of BPGN\"  onclick=\"GenerateDownloadLink('BPGNdownloadlink',document.getElementById('bpgntextarea').value, 'DCB" +
-    ActDateYYYYMMDDHHMMSS() +
+    "<input type=\"button\" value=\"Generate download link of BPGN\"  onclick=\"generateDownloadLink('BPGNdownloadlink',document.getElementById('bpgntextarea').value, 'DCB" +
+    actDateYYYYMMDDHHMMSS() +
     ".bpgn','text/plain' )\"/>";
   tmp +=
     ' <a id="BPGNdownloadlink" style="display:none"  download="myfile.bpgn" href="data:text/plain,nothing">Save BPGN File</a>';
@@ -424,7 +388,7 @@ function GenerateSaveTextFile() {
   return tmp;
 }
 
-function generateloadhtml(viewer) {
+function generateLoadHtml(viewer) {
   var tmp;
   tmp = "<html><head><title>Load BPGN</title></head>";
   tmp += '<body bgcolor="#FFFFFF" text="#000000">';
@@ -436,7 +400,7 @@ function generateloadhtml(viewer) {
     " <p>Paste (or read from disk) moves in <strong>BPGN</strong> format in the box below. You may paste the whole bgpn file (with tags) here with multiple games. </p>";
 
   tmp += '<form name="loadform">';
-  tmp += GenerateLoadTextFile();
+  tmp += generateLoadTextFile();
   tmp +=
     '<p><textarea id="bpgntextarea" name="bpgn" rows="5" cols="70"></textarea></p>';
   tmp += "<p>Game number (If more than 1 game in bpgn)</p>";
@@ -449,7 +413,7 @@ function generateloadhtml(viewer) {
   tmp += ' name="bfenb"></p>';
   tmp += '<p><input type="button" name="confirm" value="Load" ';
   tmp +=
-    'onClick="opener.assreloadgameN(' +
+    'onClick="opener.analysisReloadGameN(' +
     "'" +
     viewer +
     "'" +
@@ -460,12 +424,12 @@ function generateloadhtml(viewer) {
   return tmp;
 }
 
-function ReadTxtFile(fidinputfile, fidoutput) {
+function readTextFile(fidinputfile, fidoutput) {
   //reqires
   //  <input type="file" id="inputfiletxt" name="inputfiletxt" />
   //  and some output like <textarea id="outtextarea">
-  //then called as ReadTxtFile(inputfiletxt,outtextarea)
-  // example <input type="button" value="LoadTXTFile" onclick="ReadTxtFile('inputfiletxt','outtextarea');" />
+  //then called as readTextFile(inputfiletxt,outtextarea)
+  // example <input type="button" value="LoadTXTFile" onclick="readTextFile('inputfiletxt','outtextarea');" />
   var files = document.getElementById(fidinputfile).files;
   var file = files[0];
   var reader = new FileReader();
@@ -477,11 +441,11 @@ function ReadTxtFile(fidinputfile, fidoutput) {
   reader.readAsBinaryString(file);
 }
 
-function GenerateLoadTextFile() {
+function generateLoadTextFile() {
   var tmp = "";
 
   tmp += "<SCRIPT>";
-  tmp += "function ReadTxtFile(fidinputfile,fidoutput)";
+  tmp += "function readTextFile(fidinputfile,fidoutput)";
   tmp += "{	var files = document.getElementById(fidinputfile).files;";
   tmp += "	var file = files[0];";
   tmp += "	var reader = new FileReader();";
@@ -494,24 +458,24 @@ function GenerateLoadTextFile() {
 
   tmp += '<p><input type="file" id="inbpgnfile" name="inbpgnfile" />';
   tmp +=
-    '<input type="button" value="Read BPGN File" onclick="ReadTxtFile(\'inbpgnfile\',\'bpgntextarea\');" /></p>';
+    '<input type="button" value="Read BPGN File" onclick="readTextFile(\'inbpgnfile\',\'bpgntextarea\');" /></p>';
   return tmp;
 }
 
-function killleadspace(str) {
+function trimLeft(str) {
   var i;
   str = " " + str;
   for (i = 0; str.charAt(i) == " "; i++);
   return str.substr(i);
 }
 
-function killtailspace(str) {
+function trimRight(str) {
   var i;
   for (i = str.length - 1; str.charAt(i) == " "; i--);
   return str.substring(0, i + 1);
 }
 
-function FromGameN(bpgntext, gameord) {
+function fromGameN(bpgntext, gameord) {
   var pos, poslast;
   var ord;
 
@@ -537,12 +501,12 @@ function FromGameN(bpgntext, gameord) {
   }
 }
 
-function isempty(square) {
+function isEmpty(square) {
   var st = this.pos[square];
   return st.length == 0 ? true : false;
 }
 
-function bugmove() {
+function BugMove() {
   this.board = ""; //"a" or "b"
   this.side = ""; //'w' or 'b'
   this.frompiece = ""; //piece that moves
@@ -556,7 +520,7 @@ function bugmove() {
   this.buckuptime1 = 0;
 }
 
-function getdest(move) {
+function getDest(move) {
   var cfile = "abcdefgh";
   var crank = "12345678";
   var i;
@@ -575,15 +539,15 @@ function getdest(move) {
   return cfile.indexOf(tmp) < 0 || (rank = "") ? "" : res;
 }
 
-function whosmove(turn) {
+function whosMove(turn) {
   return turn == turn.toLowerCase() ? "b" : "w"; /*check who's to move*/
 }
 
-function incheck(whomove, dest) {
+function inCheck(whomove, dest) {
   //New201801
   var i;
   var piece;
-  op = othercolor(whomove);
+  op = oppositeColor(whomove);
   for (i = 0; i < 64; i++) {
     if (this.pos[i].charAt(0) != op) {
       continue;
@@ -598,12 +562,12 @@ function incheck(whomove, dest) {
   return false;
 }
 
-function inchecks(whomove, dest) {
+function inChecks(whomove, dest) {
   //New201801
   var i;
   var piece;
   var numberofchecks = 0;
-  op = othercolor(whomove);
+  op = oppositeColor(whomove);
   for (i = 0; i < 64; i++) {
     if (this.pos[i].charAt(0) != op) {
       continue;
@@ -619,52 +583,6 @@ function inchecks(whomove, dest) {
   return numberofchecks;
 }
 
-function moveinboard(sqsrc, sqdest) {
-  //return if supposed move is not out of board
-  // ie if like h8h9 etc. return false
-  // simply checking if vector is not pointing out of board
-
-  // notworking indev brx
-
-  var sfile = getfile(sqsrc);
-  var srank = getrank(sqsrc); //rank return 1..8
-  var dfile = getfile(sqdest);
-  var drank = getrank(sqdest); //file return 0..7
-  var vrank = drank - srank; //rank vector
-  var vfile = dfile - sfile; //file vector
-
-  out =
-    (srank == 1 && vrank < 0) ||
-    (srank == 8 && vrank > 0) ||
-    (sfile == 0 && vfile < 0) ||
-    (sfile == 7 && vfile > 0);
-  out =
-    out ||
-    srank + vrank > 8 ||
-    srank + vrank < 1 ||
-    sfile + vfile > 7 ||
-    sfile + vfile < 0;
-  return !out;
-}
-
-function moveInBoardKing(sqsrc, sqdest) {
-  //return if supposed kings move is not out of board
-  // ie if like h8h9 etc. return false
-
-  if (sqdest < 0 || sqdest > 63) return false;
-
-  var sfile = getfile(sqsrc);
-  var srank = getrank(sqsrc); //rank return 1..8
-  var dfile = getfile(sqdest);
-  var drank = getrank(sqdest); //file return 0..7
-  var vrank = drank - srank; //rank vector
-  var vfile = dfile - sfile; //file vector
-
-  out = Math.abs(dfile - sfile) > 1 || Math.abs(drank - srank) > 1;
-
-  return !out;
-}
-
 function squareTextToIndex(sqtext) {
   //in 'a8' out 0  'a' is asc 97 '1' is 49
 
@@ -678,25 +596,25 @@ function squareTextToIndex(sqtext) {
 
 function squareIndexToText(sqindex) {
   //in 0..63  out 'a8'..'h1' 'a' is asc 97 '1' is 49
-  var sqtext = String.fromCharCode(97 + getfile(sqindex)) + getrank(sqindex);
+  var sqtext = String.fromCharCode(97 + getFile(sqindex)) + getRank(sqindex);
   return sqtext;
 }
 
-function enpassantvalid(dest) {
+function enPassantValid(dest) {
   return dest == this.enpasssq ? true : false;
 }
 
-function legalmove(piece, whomove, src, dest, mode) {
+function legalMove(piece, whomove, src, dest, mode) {
   //New201801
   var srcp = this.pos[src];
   srcp = srcp.toLowerCase();
   if (mode != 1 && srcp != whomove + piece) {
     return false;
   }
-  var sfile = getfile(src);
-  var srank = getrank(src);
-  var dfile = getfile(dest);
-  var drank = getrank(dest);
+  var sfile = getFile(src);
+  var srank = getRank(src);
+  var dfile = getFile(dest);
+  var drank = getRank(dest);
   var dir;
   var i;
   if (piece == "p") {
@@ -796,17 +714,17 @@ function legalmove(piece, whomove, src, dest, mode) {
   return false; /* should never get here */
 }
 
-function legalmovechecking(piece, whomove, src, dest, mode) {
+function legalMoveChecking(piece, whomove, src, dest, mode) {
   //New201801
   var srcp = this.pos[src];
   srcp = srcp.toLowerCase();
   if (mode != 1 && srcp != whomove + piece) {
     return false;
   }
-  var sfile = getfile(src);
-  var srank = getrank(src);
-  var dfile = getfile(dest);
-  var drank = getrank(dest);
+  var sfile = getFile(src);
+  var srank = getRank(src);
+  var dfile = getFile(dest);
+  var drank = getRank(dest);
   var dir;
   var i;
   if (piece == "p") {
@@ -887,18 +805,18 @@ function legalmovechecking(piece, whomove, src, dest, mode) {
   return false; /* should never get here */
 }
 
-function getrank(ind) {
+function getRank(ind) {
   //returns 1 to 8 its original Fermy  range //New201801
   var ss = ind - (ind % 8);
   return 8 - ss / 8;
 }
 
-function getfile(ind) {
+function getFile(ind) {
   //returns 0..7 its original Fermy range //New201801
   return ind % 8;
 }
 
-function findmove(piece, whomove, spec, dest) {
+function findMove(piece, whomove, spec, dest) {
   //New201801 improved
   var cfile = "abcdefgh";
   var crank =
@@ -962,7 +880,7 @@ function findmove(piece, whomove, spec, dest) {
         //  here is try to solve it
         //console.log(' piece '+piece+' this.enpasssq '+this.enpasssq+' ');
         if (piece == "p" && dest == this.enpasssq) {
-          eptakingsq = this.enpasssq + (getrank(this.enpasssq) == 3 ? -8 : 8);
+          eptakingsq = this.enpasssq + (getRank(this.enpasssq) == 3 ? -8 : 8);
           ep = this.pos[eptakingsq];
           this.pos[eptakingsq] = "";
           //console.log('FindMove  this.enpasssq '+this.enpasssq+' eptakingsq '+eptakingsq+' ep '+ep);
@@ -995,23 +913,23 @@ function findmove(piece, whomove, spec, dest) {
   if (piece == "p") {
     /* check for promotion and enpassant*/
     if (
-      (whomove == "w" && getrank(dest) == 8) ||
-      (whomove == "b" && getrank(dest) == 1)
+      (whomove == "w" && getRank(dest) == 8) ||
+      (whomove == "b" && getRank(dest) == 1)
     ) {
       src += 100;
     } //promotion
-    if (f != getfile(dest) && this.isempty(dest)) {
+    if (f != getFile(dest) && this.isempty(dest)) {
       src += 200;
     } //enpassant
   }
   return src;
 }
 
-function promdialog(wh) {
+function promotionDialog(wh) {
   return confirm("Promote to Q? \n Cancel will promote to N") ? "q" : "n";
 }
 
-function getpromotion(wh, move, dest) {
+function getPromotion(wh, move, dest) {
   var i = move.indexOf(dest);
   var t = move.length;
   var j;
@@ -1026,7 +944,7 @@ function getpromotion(wh, move, dest) {
   return j < 0 ? this.promdialog(wh) : c;
 }
 
-function decryptmove(bd, move) {
+function decryptMove(bd, move) {
   // returns bugmove object mv. If something is wrong false is returned;
   //if this is a drop move fromsquare is set to 65;
   //if this is castling fromsquare is set to o-o or o-o-o;
@@ -1037,14 +955,14 @@ function decryptmove(bd, move) {
   var crank = "12345678";
   var drop = "rnbqp";
   var cpiece = "rnbqk";
-  var mv = new bugmove();
+  var mv = new BugMove();
   var piece;
 
-  move = extractmove(move);
+  move = extractMove(move);
   mv.board = bd.turn.toLowerCase();
-  whomove = whosmove(bd.turn);
+  whomove = whosMove(bd.turn);
   mv.side = whomove;
-  move = killleadspace(killtailspace(move));
+  move = trimLeft(trimRight(move));
 
   // castle?
   var tmp = move.toLowerCase();
@@ -1059,9 +977,9 @@ function decryptmove(bd, move) {
     return mv;
   }
 
-  var dest = getdest(move); // dest is a destination square, e.g. 'c7')
+  var dest = getDest(move); // dest is a destination square, e.g. 'c7')
   if (dest == "") return false;
-  var des = sqtoind(dest);
+  var des = sqToIndex(dest);
   if (bd.pos[des].charAt(0) == whomove && this.rule == "international")
     return false;
   mv.tosquare = des;
@@ -1135,7 +1053,7 @@ function preload(path) {
   gifs[15].src = path + "w.gif";
 }
 
-function Init1(path, filebg, wsq, bsq) {
+function initPieceGifs(path, filebg, wsq, bsq) {
   var gifpath = new Array();
   gifpath["wbd"] = path + "wbd.gif";
   gifpath["wnd"] = path + "wnd.gif";
@@ -1164,7 +1082,7 @@ function Init1(path, filebg, wsq, bsq) {
   return gifpath;
 }
 
-function fixnumber(the_number) {
+function twoDigitZeroPad(the_number) {
   //adds leading zero to a one-digit number
   if (the_number < 10) {
     the_number = "0" + the_number;
@@ -1172,7 +1090,7 @@ function fixnumber(the_number) {
   return the_number;
 }
 
-function indelim(
+function inDelim(
   str,
   pos,
   del1,
@@ -1188,7 +1106,7 @@ function indelim(
   return value;
 }
 
-function totime(numb) {
+function formatTime(numb) {
   //numb in secs
   //Math.floor Round a number downward to its nearest integer
   //Math.trunc() function returns the integer part of a number by removing any fractional digits.
@@ -1217,15 +1135,16 @@ function totime(numb) {
       "" +
       days +
       " " +
-      fixnumber(hours) +
+      twoDigitZeroPad(hours) +
       ":" +
-      fixnumber(minutes) +
+      twoDigitZeroPad(minutes) +
       ":" +
-      fixnumber(secs);
+      twoDigitZeroPad(secs);
   } else if (hours > 0) {
-    time = "" + hours + ":" + fixnumber(minutes) + ":" + fixnumber(secs);
+    time =
+      "" + hours + ":" + twoDigitZeroPad(minutes) + ":" + twoDigitZeroPad(secs);
   } else {
-    time = "" + minutes + ":" + fixnumber(secs);
+    time = "" + minutes + ":" + twoDigitZeroPad(secs);
   }
   if (tenthofsecs > 0) time += "." + tenthofsecs;
 
@@ -1233,7 +1152,7 @@ function totime(numb) {
   return time;
 }
 
-function extracttext(text) {
+function extractText(text) {
   var s;
   var pos = text.indexOf("{");
   if (pos < 0) {
@@ -1245,7 +1164,7 @@ function extracttext(text) {
   return text.substr(pos + 1);
 }
 
-function bpgnheader(
+function bpgnHeader(
   source,
   header,
 ) /* returns value of a bpgn header (header) in a bpgn text (source). Essentially looks for first occurence of substring header in the string source and returs whatever is in next " " after header */ {
@@ -1255,11 +1174,11 @@ function bpgnheader(
     return "";
   }
   pos = pos + header.length;
-  var value = indelim(source, pos, '"', '"');
+  var value = inDelim(source, pos, '"', '"');
   return value;
 }
 
-function insert(
+function strInsert(
   str1,
   ind1,
   str2,
@@ -1269,7 +1188,7 @@ function insert(
   return str1 + str2 + tmp;
 }
 
-function sqtoind(
+function sqToIndex(
   sq,
 ) /* returns an index in the array pos of a square sq on chess board (e.g. "c7") */ {
   var fc = sq.charAt(0);
@@ -1280,7 +1199,7 @@ function sqtoind(
   return 64 - s + t;
 }
 
-function generatebfen() {
+function generateBfen() {
   var i;
   var t;
   var ec = 0;
@@ -1325,11 +1244,11 @@ function generatebfen() {
 
   castles = K + Q + k + q;
 
-  res += " " + whosmove(this.turn) + " " + castles; // + ' ' + Math.floor(this.wclock) + ' ' + Math.floor(this.bclock);
+  res += " " + whosMove(this.turn) + " " + castles; // + ' ' + Math.floor(this.wclock) + ' ' + Math.floor(this.bclock);
   return res;
 }
 
-function bfen_to_bracket_notation(bfen) {
+function bfenToBracketNotation(bfen) {
   // converts the bfen from "position/hand" format to "position[hand]" format
   // tested on
   // "1/2/3/4/5/6/7/8 a b c d"
@@ -1350,7 +1269,7 @@ function bfen_to_bracket_notation(bfen) {
   }
 }
 
-function PiecesToRTF(fsPiece, fiSquareIsBlack) {
+function piecesToRtf(fsPiece, fiSquareIsBlack) {
   //BughouseChess or any chess font
   var res = "";
   if (fsPiece == "") {
@@ -1385,7 +1304,7 @@ function PiecesToRTF(fsPiece, fiSquareIsBlack) {
   return res;
 }
 
-function generateRTFTextPosition(fiWhiteUp) {
+function generateRtfTextPosition(fiWhiteUp) {
   /*
 	<p class="bughousechess24">
 	&nbsp;&nbsp;&nbsp;,t,m, , ,  , , , , , ,<br/>
@@ -1433,9 +1352,9 @@ function generateRTFTextPosition(fiWhiteUp) {
   while (i < n) {
     lsTmp2 = lsTmp[i].toLowerCase();
     if (lsTmp[i] == lsTmp2) {
-      lsHoldBlack += PiecesToRTF("b" + lsTmp2, 0);
+      lsHoldBlack += piecesToRtf("b" + lsTmp2, 0);
     } else {
-      lsHoldWhite += PiecesToRTF("w" + lsTmp2, 0);
+      lsHoldWhite += piecesToRtf("w" + lsTmp2, 0);
     }
     i++;
   }
@@ -1460,7 +1379,7 @@ function generateRTFTextPosition(fiWhiteUp) {
     res += " $";
     for (i = 0; i < 64; i++) {
       t = this.pos[i];
-      res += PiecesToRTF(t, (row + col) % 2);
+      res += piecesToRtf(t, (row + col) % 2);
       col++;
       if (col >= 8) {
         row += 1;
@@ -1507,7 +1426,7 @@ function generateRTFTextPosition(fiWhiteUp) {
     res += "\r\n $";
     for (i = 63; i > -1; i--) {
       t = this.pos[i];
-      res += PiecesToRTF(t, (row + col) % 2);
+      res += piecesToRtf(t, (row + col) % 2);
       col++;
       if (col >= 8) {
         row += 1;
@@ -1548,7 +1467,7 @@ function generateRTFTextPosition(fiWhiteUp) {
   return "(Not working, pls fix generateRTFTextPosition)";
 }
 
-function MultilineStringsConcatenate(fsA, fsB) {
+function multilineStringsConcatenate(fsA, fsB) {
   var res = "";
   var lsArrA = fsA.split("\r\n");
   var lsArrB = fsB.split("\r\n");
@@ -1577,19 +1496,19 @@ function MultilineStringsConcatenate(fsA, fsB) {
   return res;
 }
 
-function indtosq(ind) {
+function indexToSq(ind) {
   var cfiles = "abcdefgh";
-  var rank = getrank(ind);
-  var file = getfile(ind);
+  var rank = getRank(ind);
+  var file = getFile(ind);
   var res = cfiles.charAt(file) + rank;
   return res;
 }
 
-function indtoind(ind, flip) {
+function indexToIndex(ind, flip) {
   return flip == 0 ? ind : 63 - ind;
 }
 
-function drawhold() {
+function drawHold() {
   var i;
   var j;
   var t;
@@ -1654,7 +1573,7 @@ function holdText(fBoard) {
   return ls;
 }
 
-function drawpos() /* draws a position and holding (pos and holding respectively) in the viewer, ind is the index of upper left corner of the board in the array document.images[]. That way function doesn't need to know the board name */ {
+function drawPos() /* draws a position and holding (pos and holding respectively) in the viewer, ind is the index of upper left corner of the board in the array document.images[]. That way function doesn't need to know the board name */ {
   var i;
   var st;
   var ltmp1;
@@ -1676,7 +1595,7 @@ function drawpos() /* draws a position and holding (pos and holding respectively
   return;
 }
 
-function refreshinfo() {
+function refreshInfo() {
   if (this.displaymode == "playback" || this.displaymode == "diagram") return;
   var i;
   var j;
@@ -1715,7 +1634,7 @@ function refreshinfo() {
   v.nextmove.options[0].selected = true;
 }
 
-function refreshhighlight() {
+function refreshHighlight() {
   // we don't want to run our function when things do not exist:
 
   if (!v1.a) return;
@@ -1726,7 +1645,7 @@ function refreshhighlight() {
 
     // unhighlight the board
 
-    boardObj.unHighlightAll();
+    boardObj.bxUnhighlightAll();
 
     // get the moves to highlight:
 
@@ -1746,7 +1665,7 @@ function refreshhighlight() {
 
     // it's a dropmove:
     if (typeof fromSquare === "number" && fromSquare == 65) {
-      boardObj.Highlight(toSquare);
+      boardObj.bxHighlight(toSquare);
     }
 
     // it's a normal move:
@@ -1757,18 +1676,18 @@ function refreshhighlight() {
       typeof toSquare === "number" &&
       toSquare <= 63
     ) {
-      boardObj.Highlight(fromSquare, toSquare);
+      boardObj.bxHighlight(fromSquare, toSquare);
     }
 
     // short castle:
 
     if (fromSquare == "o-o") {
       if (currentNode.dmove.side == "w") {
-        boardObj.Highlight(61, 62);
+        boardObj.bxHighlight(61, 62);
       }
 
       if (currentNode.dmove.side == "b") {
-        boardObj.Highlight(5, 6);
+        boardObj.bxHighlight(5, 6);
       }
     }
 
@@ -1777,17 +1696,17 @@ function refreshhighlight() {
     if (fromSquare == "o-o-o") {
       // short castle
       if (currentNode.dmove.side == "w") {
-        boardObj.Highlight(58, 59);
+        boardObj.bxHighlight(58, 59);
       }
 
       if (currentNode.dmove.side == "b") {
-        boardObj.Highlight(2, 3);
+        boardObj.bxHighlight(2, 3);
       }
     }
   }
 }
 
-function NODE() {
+function Node() {
   this.nParent = BPGN_ROOT; // Partner node index
   this.nMove = 0; // Move counter
   this.cBoard = BPGN_BOARD_A1; // Board type ('A', 'a', 'B', or 'b')
@@ -1801,32 +1720,32 @@ function NODE() {
   this.cLagCompensation = ""; //SKAcz Lag and Lag compensation
 }
 
-function QUEUE(state, token) {
+function Queue(state, token) {
   this.nlaststate = state; // token queue last state
   this.cToken = token; // token queue token
 }
 
 // get new node
-function BPGN_GetNewNode() {
+function bpgnGetNewNode() {
   var i = this.BPGN.length;
-  this.BPGN[this.BPGN.length] = new NODE();
+  this.BPGN[this.BPGN.length] = new Node();
   return i;
 }
 
 // is token queue empty?
-function BPGN_QueueIsEmpty() {
+function bpgnQueueIsEmpty() {
   return this.Queue.length == 0; //return this.nCount;
 }
 
 // insert into token queue
-function BPGN_InsertQueue(nls, ct) {
+function bpgnInsertQueue(nls, ct) {
   this.nError = ERROR_NONE;
-  this.Queue[this.Queue.length] = new QUEUE(nls, ct);
+  this.Queue[this.Queue.length] = new Queue(nls, ct);
   return true;
 }
 
 // remove from token queue
-function BPGN_RemoveQueue() {
+function bpgnRemoveQueue() {
   var i;
   var n = this.Queue.length;
   if (n > 0) {
@@ -1842,14 +1761,14 @@ function BPGN_RemoveQueue() {
   }
 }
 
-function gettoken() {
+function getToken() {
   var ni;
   var ctmp;
   var cttt;
   var x;
   var tmp;
 
-  if (!this.BPGN_QueueIsEmpty()) {
+  if (!this.BPGN_QueueisEmpty()) {
     tmp = this.BPGN_RemoveQueue();
     if (tmp != false) {
       this.ctoken = tmp.cToken;
@@ -2062,13 +1981,13 @@ function gettoken() {
 }
 
 // is the current token a note?
-function bpgnisnote() {
+function bpgnIsNote() {
   if (this.ctoken.length < 3) return false;
   return this.ctoken.charAt(0) == BPGN_NOTE && this.ctoken.charAt(1) == ":";
 }
 
 // is the current token an annotation?
-function bpgnisannotation() {
+function bpgnIsAnnotation() {
   if (this.ctoken.length < 3) return false;
   return (
     this.ctoken.charAt(0) == BPGN_ANNOTATION && this.ctoken.charAt(1) == ":"
@@ -2076,13 +1995,13 @@ function bpgnisannotation() {
 }
 
 // is the current token an lag? //SKAcz
-function bpgnislag() {
+function bpgnIsLag() {
   if (this.ctoken.length < 3) return false;
   return this.ctoken.charAt(0) == BPGN_LAG && this.ctoken.charAt(1) == ":";
 }
 
 // get move
-function bpgngetmove(nmovea, nmoveb, aside) {
+function bpgnGetMove(nmovea, nmoveb, aside) {
   var nmove;
   var bboarda1;
   var bboarda2;
@@ -2199,7 +2118,7 @@ function bpgngetmove(nmovea, nmoveb, aside) {
 }
 
 // get time
-function bpgngettime() {
+function bpgnGetTime() {
   var ct;
   var lt;
   if (!this.gettoken()) {
@@ -2240,7 +2159,7 @@ function bpgngettime() {
 }
 
 // get result
-function bpgngetresult() {
+function bpgnGetResult() {
   var nTemp;
   var cTemp;
   nTemp = this.nlaststate;
@@ -2282,7 +2201,7 @@ function bpgngetresult() {
 }
 
 // get note
-function bpgngetnote() {
+function bpgnGetNote() {
   var bNote;
   var bAnno;
   var bLag;
@@ -2322,7 +2241,7 @@ function bpgngetnote() {
   return true;
 }
 
-function bpgngetfirstnote() {
+function bpgnGetFirstNote() {
   // there can be a note before the game starts so lets scan for it
   if (this.gettoken()) {
     if (this.nlaststate == BPGN_COMMENT2) {
@@ -2349,14 +2268,14 @@ function bpgngetfirstnote() {
   return this.nError == ERROR_NONE;
 }
 
-function getboard(move) {
+function getBoard(move) {
   if (move.length) {
     var i = move.indexOf(BPGN_MOVE_DSTR);
     return i > 0 ? move.charAt(i - 1) : false;
   } else return false;
 }
 
-function stuffnode(
+function stuffNode(
   nNewIndex,
   nParent,
   nMove,
@@ -2380,23 +2299,7 @@ function stuffnode(
   // this.BPGN[nNewIndex].dmove=false;
 }
 
-function dispqueue() {
-  var ln = this.Queue.length;
-  var i;
-  document.writeln("Queue is of length " + ln + " <br>");
-  for (i = 0; i < ln; i++)
-    document.writeln(
-      "#" +
-        i +
-        "|token " +
-        this.Queue[i].cToken +
-        "|laststate " +
-        this.Queue[i].nlaststate +
-        "<br>",
-    );
-}
-
-function getmoven(move) {
+function getMoveN(move) {
   if (move.length) {
     var i = move.indexOf(BPGN_MOVE_DSTR);
     if (i < 2) return false;
@@ -2405,13 +2308,13 @@ function getmoven(move) {
   } else return false;
 }
 
-function getside(move) {
+function getSide(move) {
   var i = move.indexOf(BPGN_MOVE_DSTR);
   if (i < 2) return false;
   return move.charAt(i - 1);
 }
 
-function changeturnside(side) {
+function changeTurnSide(side) {
   if (side == side.toLowerCase()) {
     return side.toUpperCase();
   } else {
@@ -2419,7 +2322,7 @@ function changeturnside(side) {
   }
 }
 
-function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
+function bpgnGetBody(nParent, nMoveA, nMoveB, aside) {
   var nMove;
   var cBoard;
   var cMove;
@@ -2443,8 +2346,8 @@ function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
   while (true) {
     cMove = this.bpgngetmove(nMoveA, nMoveB, aside);
     if (cMove == false) break;
-    cBoard = getboard(cMove);
-    nMove = getmoven(cMove);
+    cBoard = getBoard(cMove);
+    nMove = getMoveN(cMove);
     if ((cBoard == "a" || cBoard == "A") && !this.afirstmovea) {
       nMoveA = nMove;
       this.afirstmovea = true;
@@ -2455,7 +2358,7 @@ function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
     }
     if (nMove != false) {
       if (cBoard == "a" || cBoard == "A") {
-        aside = changeturnside(aside);
+        aside = changeTurnSide(aside);
       }
     }
 
@@ -2476,7 +2379,7 @@ function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
       }
 
       if (cLastBoard == "a" || cLastBoard == "A") {
-        aaside = changeturnside(aside);
+        aaside = changeTurnSide(aside);
       } else {
         aaside = aside;
       }
@@ -2640,7 +2543,7 @@ function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
             }
 
             if (cLastBoard == "a" || cLastBoard == "A") {
-              aaside = changeturnside(aside);
+              aaside = changeTurnSide(aside);
             } else {
               aaside = aside;
             }
@@ -2701,7 +2604,7 @@ function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
         }
 
         if (cLastBoard == "a" || cLastBoard == "A") {
-          aaside = changeturnside(aside);
+          aaside = changeTurnSide(aside);
         } else {
           aaside = aside;
         }
@@ -2787,7 +2690,7 @@ function BPGN_GetBody(nParent, nMoveA, nMoveB, aside) {
   return this.nError == ERROR_NONE;
 }
 
-function BPGN_SaveAnno(nNode) {
+function bpgnSaveAnno(nNode) {
   var nA;
   var nL;
   var nI;
@@ -2829,7 +2732,7 @@ function BPGN_SaveAnno(nNode) {
   this.cSaveGameString += "}";
 }
 
-function assdelete(viewer) {
+function analysisDelete(viewer) {
   v = eval(viewer);
   if (v.currentmove == BPGN_ROOT) return;
   v.BPGN_DeleteCurrentMove(v.currentmove);
@@ -2837,7 +2740,7 @@ function assdelete(viewer) {
   v.refreshhighlight();
 }
 
-function BPGN_DeleteCurrentMove(nCurrent) {
+function bpgnDeleteCurrentMove(nCurrent) {
   var nI;
   var nN;
   var nP;
@@ -2865,7 +2768,7 @@ function BPGN_DeleteCurrentMove(nCurrent) {
   this.BPGN[nP].nNext.length = ln - 1;
 }
 
-function BPGN_SaveTime(nNode) {
+function bpgnSaveTime(nNode) {
   var cTmp;
   var nL;
   var nT;
@@ -2889,7 +2792,7 @@ function BPGN_SaveTime(nNode) {
   this.cSaveGameString += cTmp;
 }
 
-function BPGN_SaveMove(nNode) {
+function bpgnSaveMove(nNode) {
   var cTmp;
   var nL;
   var nT;
@@ -2916,7 +2819,7 @@ function BPGN_SaveMove(nNode) {
   this.cSaveGameString += cTmp;
 }
 
-function BPGN_SaveNote(nNode) {
+function bpgnSaveNote(nNode) {
   var nC;
   var nL;
   var nI;
@@ -2959,7 +2862,7 @@ function BPGN_SaveNote(nNode) {
   return true;
 }
 
-function BPGN_SaveBody(nNode) {
+function bpgnSaveBody(nNode) {
   var nMain;
   var nI;
   var nN;
@@ -3029,7 +2932,7 @@ function BPGN_SaveBody(nNode) {
   }
 }
 
-function BPGN_SaveGame() {
+function bpgnSaveGame() {
   var nL;
   this.cSaveGameString = "";
   this.sgame = "";
@@ -3093,12 +2996,12 @@ function BPGN_SaveGame() {
     this.RTFTextPosition = this.a.generateRTFTextPosition(this.a.flip);
   } else if (this.numboard == 2) {
     if (this.a.flip) {
-      this.RTFTextPosition = MultilineStringsConcatenate(
+      this.RTFTextPosition = multilineStringsConcatenate(
         this.b.generateRTFTextPosition(0),
         this.a.generateRTFTextPosition(1),
       );
     } else {
-      this.RTFTextPosition = MultilineStringsConcatenate(
+      this.RTFTextPosition = multilineStringsConcatenate(
         this.a.generateRTFTextPosition(0),
         this.b.generateRTFTextPosition(1),
       );
@@ -3106,19 +3009,19 @@ function BPGN_SaveGame() {
   }
 }
 
-function assmdown(ind, viewer, bd) {
+function analysisMDown(ind, viewer, bd) {
   var v = eval(viewer);
   v.mdown(ind, bd);
   return false;
 }
 
-function assmup(ind, viewer, bd) {
+function analysisMUp(ind, viewer, bd) {
   var v = eval(viewer);
   v.mup(ind, bd);
   return false;
 }
 
-function assmup2(ind, viewer, bd) {
+function analysisMUp2(ind, viewer, bd) {
   var v = eval(viewer);
   //if sq src = sq target let sq src
 
@@ -3141,7 +3044,7 @@ function assmup2(ind, viewer, bd) {
   return false;
 }
 
-function assclick(ind, viewer, bd) {
+function analysisClick(ind, viewer, bd) {
   var v = eval(viewer);
   if (v.movestart == "" || ind < 0 || ind > 63) {
     //allowing retaking after touching piece in hand
@@ -3152,7 +3055,7 @@ function assclick(ind, viewer, bd) {
   return false;
 }
 
-function BPGNRepairMove(fMove) {
+function bpgnRepairMove(fMove) {
   //correction of bpgn move to be short notation for pawn moves and readabla in BPGNView3 and DCB
   var idx = fMove.indexOf(".") - 1;
   var moveOnly = fMove.substr(idx + 2); //move without move counter, board designation, and dot
@@ -3171,7 +3074,7 @@ function BPGNRepairMove(fMove) {
   return outBPGNMove;
 }
 
-function tobpgn(mv) {
+function toBpgn(mv) {
   var bd = mv.board,
     wh = mv.side,
     p = mv.frompiece.charAt(1);
@@ -3182,7 +3085,7 @@ function tobpgn(mv) {
   //Castling are in code above lowcase
   if (fr == "o-o-o") return bd + ".O-O-O";
   if (fr == "o-o") return bd + ".O-O";
-  fr = fr < 64 ? indtosq(fr) : "@";
+  fr = fr < 64 ? indexToSq(fr) : "@";
   if (p != "p") {
     p = p.toUpperCase();
   } else {
@@ -3193,12 +3096,12 @@ function tobpgn(mv) {
     prom = "=" + mv.frompiece.charAt(2);
     prom = prom.toUpperCase();
   }
-  var lsMoveText = bd + "." + p + fr + c + indtosq(mv.tosquare) + prom;
-  lsMoveText = BPGNRepairMove(lsMoveText);
+  var lsMoveText = bd + "." + p + fr + c + indexToSq(mv.tosquare) + prom;
+  lsMoveText = bpgnRepairMove(lsMoveText);
   return lsMoveText;
 }
 
-function mdown(ind, bd) {
+function mDown(ind, bd) {
   // mown gets running, when mouse is pressed down on a square
   // if it was pressed down on an enemy square or a clear square, when you release your mouse button, mdown runs again
   // if it was pressed down on your own square, then when you release it, mouseup will run
@@ -3211,10 +3114,10 @@ function mdown(ind, bd) {
   var c = "";
   if (ind < 0 || ind > 73) return;
   if (ind < 64) {
-    ind = indtoind(ind, tbd.flip);
+    ind = indexToIndex(ind, tbd.flip);
     if (tbd.isempty(ind)) return;
-    if (tbd.pos[ind].charAt(0) != whosmove(tbd.turn)) return;
-    src = indtosq(ind);
+    if (tbd.pos[ind].charAt(0) != whosMove(tbd.turn)) return;
+    src = indexToSq(ind);
     c = tbd.pos[ind].charAt(1);
     if (c == "p") {
       c = "";
@@ -3228,7 +3131,7 @@ function mdown(ind, bd) {
   if (tbd.flip != 0) {
     ind = 9 - ind;
   }
-  if (whosmove(tbd.turn) != tbd.dropbar[ind].charAt(0)) {
+  if (whosMove(tbd.turn) != tbd.dropbar[ind].charAt(0)) {
     return;
   }
   this.movestart = bd + tbd.dropbar[ind].charAt(1) + "@";
@@ -3236,7 +3139,7 @@ function mdown(ind, bd) {
   return;
 }
 
-function mup(ind, bd) {
+function mUp(ind, bd) {
   // mdown gets running, when mouse is pressed down on a square
   // if it was pressed down on an enemy square or a clear square, when you release your mouse button, mdown runs again
   // if it was pressed down on your own square, then when you release it, mouseup will run
@@ -3253,8 +3156,8 @@ function mup(ind, bd) {
   if (tmp.charAt(0) != bd) return;
   tmp = tmp.substr(1, tmp.length);
   if (ind < 0 || ind > 63) return;
-  ind = indtoind(ind, tbd.flip);
-  dest = indtosq(ind);
+  ind = indexToIndex(ind, tbd.flip);
+  dest = indexToSq(ind);
   tmp += dest;
   tmp = tmp.toLowerCase();
   if (tmp == "ke1g1" || tmp == "ke8g8") {
@@ -3269,27 +3172,27 @@ function mup(ind, bd) {
   this.execmove(bd, tmp);
 }
 
-function getbpgnheaders(bpgntext) {
+function getBpgnHeaders(bpgntext) {
   //first initialize properties that come from bpgn header
-  this.gameevent = bpgnheader(bpgntext, BPGN_EVENT);
+  this.gameevent = bpgnHeader(bpgntext, BPGN_EVENT);
   if (this.gameevent == "") {
     this.gameevent = "bughouse chess game";
   }
-  this.gamedate = bpgnheader(bpgntext, BPGN_DATE);
+  this.gamedate = bpgnHeader(bpgntext, BPGN_DATE);
   if (this.gamedate == "") {
     var the_date = new Date();
     this.gamedate =
       the_date.getFullYear() +
       "." +
-      fixnumber(1 + the_date.getMonth()) +
+      twoDigitZeroPad(1 + the_date.getMonth()) +
       "." +
-      fixnumber(the_date.getDate());
+      twoDigitZeroPad(the_date.getDate());
   }
-  this.gamesite = bpgnheader(bpgntext, BPGN_SITE);
+  this.gamesite = bpgnHeader(bpgntext, BPGN_SITE);
   if (this.gamesite == "") {
     this.gamesite = DEFAULT_SITE;
   }
-  this.timecontrol = bpgnheader(bpgntext, BPGN_TIMECTRL);
+  this.timecontrol = bpgnHeader(bpgntext, BPGN_TIMECTRL);
   if (this.timecontrol == "") {
     this.timecontrol = DEFAULT_TIME + "+" + DEFAULT_INC;
   }
@@ -3304,48 +3207,48 @@ function getbpgnheaders(bpgntext) {
   if (this.gameinc == NaN) {
     this.gameinc = eval(DEFAULT_INC);
   }
-  this.gameresult = bpgnheader(bpgntext, BPGN_RESULT);
+  this.gameresult = bpgnHeader(bpgntext, BPGN_RESULT);
   if (this.gameresult == "") {
     this.gameresult = DEFAULT_RESULT;
   }
 
-  this.whitea = bpgnheader(bpgntext, BPGN_WHITEA);
+  this.whitea = bpgnHeader(bpgntext, BPGN_WHITEA);
   if (this.whitea == "") {
     this.whitea = DEFAULT_WHITEA;
   }
-  this.blacka = bpgnheader(bpgntext, BPGN_BLACKA);
+  this.blacka = bpgnHeader(bpgntext, BPGN_BLACKA);
   if (this.blacka == "") {
     this.blacka = DEFAULT_BLACKA;
   }
-  this.whiteb = bpgnheader(bpgntext, BPGN_WHITEB);
+  this.whiteb = bpgnHeader(bpgntext, BPGN_WHITEB);
   if (this.whiteb == "") {
     this.whiteb = DEFAULT_WHITEB;
   }
-  this.blackb = bpgnheader(bpgntext, BPGN_BLACKB);
+  this.blackb = bpgnHeader(bpgntext, BPGN_BLACKB);
   if (this.blackb == "") {
     this.blackb = DEFAULT_BLACKB;
   }
 
-  this.whiteaelo = bpgnheader(bpgntext, BPGN_WHITEAELO);
+  this.whiteaelo = bpgnHeader(bpgntext, BPGN_WHITEAELO);
   if (this.whiteaelo == "") {
     this.whiteaelo = DEFAULT_RATING;
   }
-  this.blackaelo = bpgnheader(bpgntext, BPGN_BLACKAELO);
+  this.blackaelo = bpgnHeader(bpgntext, BPGN_BLACKAELO);
   if (this.blackaelo == "") {
     this.blackaelo = DEFAULT_RATING;
   }
-  this.whitebelo = bpgnheader(bpgntext, BPGN_WHITEBELO);
+  this.whitebelo = bpgnHeader(bpgntext, BPGN_WHITEBELO);
   if (this.whitebelo == "") {
     this.whitebelo = DEFAULT_RATING;
   }
-  this.blackbelo = bpgnheader(bpgntext, BPGN_BLACKBELO);
+  this.blackbelo = bpgnHeader(bpgntext, BPGN_BLACKBELO);
   if (this.blackbelo == "") {
     this.blackbelo = DEFAULT_RATING;
   }
   return true;
 }
 
-function drawboard() /* generates html for the board */ {
+function drawBoard() /* generates html for the board */ {
   let flip = this.flip;
 
   var size = this.sqsize;
@@ -3387,7 +3290,7 @@ function drawboard() /* generates html for the board */ {
     '">';
   if (this.reloadmode == "noreload" && this.displaymode == "diagram") {
     tmp = tmp + tago;
-    tmp = tmp + "  " + totime(eval("this." + u + "clock")) + tagc;
+    tmp = tmp + "  " + formatTime(eval("this." + u + "clock")) + tagc;
   } else {
     tmp =
       tmp +
@@ -3458,21 +3361,21 @@ function drawboard() /* generates html for the board */ {
       }
       t += '">';
       t +=
-        '<a href="javascript:void(0)" onclick="if (!eventedmousedown) assclick(' +
+        '<a href="javascript:void(0)" onclick="if (!eventedmousedown) analysisClick(' +
         ind +
         ",'" +
         this.viewername +
         "','" +
         bd +
         "');" +
-        '" onmousedown=\"eventedmousedown=true;assclick(' +
+        '" onmousedown=\"eventedmousedown=true;analysisClick(' +
         ind +
         ",'" +
         this.viewername +
         "','" +
         bd +
         "');event.preventDefault();" +
-        '" onmouseup="assmup2(' +
+        '" onmouseup="analysisMUp2(' +
         ind +
         ",'" +
         this.viewername +
@@ -3492,7 +3395,7 @@ function drawboard() /* generates html for the board */ {
         "></a></td>";
       //style=\"border: 0px outset green;\"
     }
-    /* onMouseDown="assmdown('+ind+",'"+this.viewername+"','"+bd+"');"+'" onMouseUp="assmup('+ind+",'"+this.viewername+"','"+bd+"');"+'" */
+    /* onMouseDown="analysisMDown('+ind+",'"+this.viewername+"','"+bd+"');"+'" onMouseUp="analysisMUp('+ind+",'"+this.viewername+"','"+bd+"');"+'" */
     t += "</tr>";
   }
 
@@ -3516,7 +3419,7 @@ function drawboard() /* generates html for the board */ {
 
   t += "</table>";
   t.length -= 4;
-  insert(
+  strInsert(
     t,
     t.indexOf("height") + 11,
     ' name="' + this.viewername + bd + 'uleft">',
@@ -3528,23 +3431,23 @@ function drawboard() /* generates html for the board */ {
   for (i = 0; i < 5; i++) {
     for (j = 0; j < 2; j++) {
       ind = 64 + i * 2 + j;
-      //t+='<a href="javascript:void(0)" onmousedown="assclick('+ind+",'"+this.viewername+"','"+bd+"');"+'">'; //click click on any device
+      //t+='<a href="javascript:void(0)" onmousedown="analysisClick('+ind+",'"+this.viewername+"','"+bd+"');"+'">'; //click click on any device
       t +=
-        '<a href="javascript:void(0)" onclick="if (!eventedmousedown) assclick(' +
+        '<a href="javascript:void(0)" onclick="if (!eventedmousedown) analysisClick(' +
         ind +
         ",'" +
         this.viewername +
         "','" +
         bd +
         "');" +
-        '" onmousedown=\"eventedmousedown=true;assclick(' +
+        '" onmousedown=\"eventedmousedown=true;analysisClick(' +
         ind +
         ",'" +
         this.viewername +
         "','" +
         bd +
         "');event.preventDefault();" +
-        '" onmouseup="assmup2(' +
+        '" onmouseup="analysisMUp2(' +
         ind +
         ",'" +
         this.viewername +
@@ -3604,7 +3507,7 @@ function drawboard() /* generates html for the board */ {
     '">';
   if (this.reloadmode == "noreload" && this.displaymode == "diagram") {
     tmp = tmp + tago;
-    tmp = tmp + "  " + totime(eval("this." + d + "clock")) + tagc;
+    tmp = tmp + "  " + formatTime(eval("this." + d + "clock")) + tagc;
   } else {
     tmp =
       tmp +
@@ -3621,7 +3524,7 @@ function drawboard() /* generates html for the board */ {
     tmp +=
       '<input hidden readonly type="text" size="12" name="lastmove' +
       bd +
-      '" value=" " onChange="assexecmove(this.value,\'' +
+      '" value=" " onChange="analysisExecMove(this.value,\'' +
       bd +
       "','" +
       this.viewername +
@@ -3644,7 +3547,7 @@ function drawboard() /* generates html for the board */ {
       tmp +=
         ' <input type="text" size="16" name="dn' +
         bd +
-        '" onFocus="assexecmove(document.' +
+        '" onFocus="analysisExecMove(document.' +
         this.viewername +
         ".lastmove" +
         bd +
@@ -3668,10 +3571,10 @@ function drawboard() /* generates html for the board */ {
   return tmp;
 }
 
-function brefreshform() {
+function bRefreshForm() {
   if (!this.redraw) return;
   var bd = this.boardname;
-  var wh = whosmove(this.turn);
+  var wh = whosMove(this.turn);
   var upmove;
   if ((this.flip == 0 && wh == "b") || (this.flip == 1 && wh == "w")) {
     upmove = true;
@@ -3702,11 +3605,11 @@ function brefreshform() {
     ); /*refresh clocks */
     k = eval("document." + this.viewername + ".dnclock" + bd);
     if (this.flip == 1) {
-      s.value = totime(this.wclock);
-      k.value = totime(this.bclock);
+      s.value = formatTime(this.wclock);
+      k.value = formatTime(this.bclock);
     } else {
-      s.value = totime(this.bclock);
-      k.value = totime(this.wclock);
+      s.value = formatTime(this.bclock);
+      k.value = formatTime(this.wclock);
     }
 
     /* if (upmove) {outc=eval('document.'+this.viewername+'.upclock'+bd)}
@@ -3742,7 +3645,7 @@ function brefreshform() {
   }
 }
 
-function setauleft() {
+function setAULeft() {
   this.a.uleft =
     this.numboard == 2
       ? document.images.length - 151
@@ -3750,7 +3653,7 @@ function setauleft() {
   this.b.uleft = this.a.uleft + 76;
 }
 
-function redrawhold(piece, inc) {
+function redrawHold(piece, inc) {
   if (!this.redraw) return;
   var ind = this.syncpic();
   var i;
@@ -3783,8 +3686,8 @@ function redrawhold(piece, inc) {
   }
 }
 
-function dropmove(mv) {
-  var wh = whosmove(this.turn);
+function dropMove(mv) {
+  var wh = whosMove(this.turn);
   var king = wh == "w" ? this.kingw : this.kingb;
   this.pos[mv.tosquare] = mv.frompiece;
   if (this.incheck(wh, king)) {
@@ -3794,57 +3697,57 @@ function dropmove(mv) {
   this.redrawsquare(mv.tosquare);
   this.redrawhold(mv.frompiece, -1);
   if (mv.frompiece == "br") {
-    if (mv.tosquare == sqtoind("h8") && this.shortcastleb == "rook") {
+    if (mv.tosquare == sqToIndex("h8") && this.shortcastleb == "rook") {
       this.shortcastleb = true;
     }
-    if (mv.tosquare == sqtoind("a8") && this.longcastleb == "rook") {
+    if (mv.tosquare == sqToIndex("a8") && this.longcastleb == "rook") {
       this.longcastleb = true;
     }
   }
   if (mv.frompiece == "wr") {
-    if (mv.tosquare == sqtoind("h1") && this.shortcastlew == "rook") {
+    if (mv.tosquare == sqToIndex("h1") && this.shortcastlew == "rook") {
       this.shortcastlew = true;
     }
-    if (mv.tosquare == sqtoind("a1") && this.longcastlew == "rook") {
+    if (mv.tosquare == sqToIndex("a1") && this.longcastlew == "rook") {
       this.longcastlew = true;
     }
   }
   return true;
 }
 
-function undodropmove(mv) {
+function undoDropMove(mv) {
   var wh = mv.side;
   this.pos[mv.tosquare] = "";
   this.redrawsquare(mv.tosquare);
   this.redrawhold(mv.frompiece, 1);
 }
 
-function enpassant(bd, mv) {
+function enPassant(bd, mv) {
   var cp = mv.frompiece.charAt(0) + mv.frompiece.charAt(1);
   var tbd = eval("this." + bd);
-  var wh = whosmove(tbd.turn);
+  var wh = whosMove(tbd.turn);
   var king = eval("this." + bd + ".king" + wh);
   tbd.pos[mv.tosquare] = cp;
   tbd.pos[mv.fromsquare] = "";
   var enpass = wh == "w" ? mv.tosquare + 8 : mv.tosquare - 8;
-  if (tbd.pos[enpass] != othercolor(wh) + "p") {
+  if (tbd.pos[enpass] != oppositeColor(wh) + "p") {
     return false;
   }
   tbd.pos[enpass] = "";
   if (tbd.incheck(wh, king)) {
     tbd.pos[mv.fromsquare] = cp;
     tbd.pos[mv.tosquare] = mv.topiece;
-    tbd.pos[enpass] = othercolor(wh) + "p";
+    tbd.pos[enpass] = oppositeColor(wh) + "p";
     return false;
   }
-  this.capture(bd, othercolor(wh) + "p", 1);
+  this.capture(bd, oppositeColor(wh) + "p", 1);
   tbd.redrawsquare(mv.fromsquare);
   tbd.redrawsquare(mv.tosquare);
   tbd.redrawsquare(enpass);
   return true;
 }
 
-function undoenpassant(mv) {
+function undoEnPassant(mv) {
   var tbd = eval("this." + mv.board);
   var wh = mv.side;
   var cp = wh + "p";
@@ -3852,8 +3755,8 @@ function undoenpassant(mv) {
   tbd.pos[mv.fromsquare] = cp;
   tbd.pos[mv.tosquare] = "";
   var enpass = wh == "w" ? mv.tosquare + 8 : mv.tosquare - 8;
-  tbd.pos[enpass] = othercolor(wh) + "p";
-  this.capture(bd, othercolor(wh) + "p", -1);
+  tbd.pos[enpass] = oppositeColor(wh) + "p";
+  this.capture(bd, oppositeColor(wh) + "p", -1);
   tbd.redrawsquare(enpass);
   tbd.redrawsquare(mv.tosquare);
   tbd.redrawsquare(mv.fromsquare);
@@ -3861,7 +3764,7 @@ function undoenpassant(mv) {
 
 function promotion(bd, mv) {
   var tbd = eval("this." + bd);
-  var wh = whosmove(tbd.turn);
+  var wh = whosMove(tbd.turn);
   var king = eval("this." + bd + ".king" + wh);
   var p = mv.frompiece.charAt(2);
   p = p.toUpperCase();
@@ -3880,7 +3783,7 @@ function promotion(bd, mv) {
   return true;
 }
 
-function undopromotion(mv) {
+function undoPromotion(mv) {
   var tbd = eval("this." + mv.board);
   var bd = mv.board;
   var wh = mv.side;
@@ -3893,7 +3796,7 @@ function undopromotion(mv) {
   }
 }
 
-function regularmove(mv) {
+function regularMove(mv) {
   var bd = mv.board;
   var tbd = eval("this." + bd);
   var wh = mv.side;
@@ -3907,7 +3810,7 @@ function regularmove(mv) {
   return true;
 }
 
-function undoregularmove(mv) {
+function undoRegularMove(mv) {
   var tbd = eval("this." + mv.board);
   var wh = mv.side;
   if (mv.frompiece.charAt(1) == "k") {
@@ -3926,25 +3829,25 @@ function undoregularmove(mv) {
   tbd.redrawsquare(mv.fromsquare);
 }
 
-function shortcastle(color) {
+function shortCastle(color) {
   var tmp = eval("this.shortcastle" + color);
   return tmp;
 }
 
-function longcastle(color) {
+function longCastle(color) {
   var tmp = eval("this.longcastle" + color);
   return tmp;
 }
 
-function setking(mv) {
+function setKing(mv) {
   var t = mv.fromsquare + "s";
   t = t.substr(0, t.length - 1);
-  var wh = whosmove(this.turn);
-  if (this.pos[sqtoind("e1")] != "wk") {
+  var wh = whosMove(this.turn);
+  if (this.pos[sqToIndex("e1")] != "wk") {
     this.shortcastlew = "king";
     this.longcastlew = "king";
   }
-  if (this.pos[sqtoind("e8")] != "bk") {
+  if (this.pos[sqToIndex("e8")] != "bk") {
     this.shortcastleb = "king";
     this.longcastleb = "king";
   }
@@ -3953,10 +3856,10 @@ function setking(mv) {
       this.kingw = mv.tosquare;
     }
     if (t == "o-o-o") {
-      this.kingw = sqtoind("c1");
+      this.kingw = sqToIndex("c1");
     }
     if (t == "o-o") {
-      this.kingw = sqtoind("g1");
+      this.kingw = sqToIndex("g1");
     }
   }
   if (mv.frompiece == "bk") {
@@ -3964,25 +3867,25 @@ function setking(mv) {
       this.kingb = mv.tosquare;
     }
     if (t == "o-o-o") {
-      this.kingb = sqtoind("c8");
+      this.kingb = sqToIndex("c8");
     }
     if (t == "o-o") {
-      this.kingb = sqtoind("g8");
+      this.kingb = sqToIndex("g8");
     }
   }
   if (this.shortcastlew != "king") {
-    if (this.pos[sqtoind("h1")] != "wr") {
+    if (this.pos[sqToIndex("h1")] != "wr") {
       this.shortcastlew = "rook";
     }
-    if (this.pos[sqtoind("a1")] != "wr") {
+    if (this.pos[sqToIndex("a1")] != "wr") {
       this.longcastlew = "rook";
     }
   }
   if (this.shortcastleb != "king") {
-    if (this.pos[sqtoind("h8")] != "br") {
+    if (this.pos[sqToIndex("h8")] != "br") {
       this.shortcastleb = "rook";
     }
-    if (this.pos[sqtoind("a8")] != "br") {
+    if (this.pos[sqToIndex("a8")] != "br") {
       this.longcastleb = "rook";
     }
   }
@@ -3995,14 +3898,14 @@ function castle(bd, mode) {
   var s = new Array(d);
   var i;
   var tbd = eval("this." + bd);
-  var wh = whosmove(tbd.turn);
+  var wh = whosMove(tbd.turn);
   var cc = mode == "short" ? tbd.shortcastle(wh) : tbd.longcastle(wh);
   var king = eval("this." + bd + ".king" + wh);
   var rr;
   if (wh == "w") {
-    s[0] = sqtoind("e1");
+    s[0] = sqToIndex("e1");
   } else {
-    s[0] = sqtoind("e8");
+    s[0] = sqToIndex("e8");
   }
   for (i = 1; i < d; i++) s[i] = s[i - 1] + dir;
   rr = tbd.pos[s[d - 1]];
@@ -4069,17 +3972,17 @@ function undocastle(bd,mode,dpiece,wh)
 }
 */
 
-function undocastle(bd, mode, dpiece, wh) {
+function undoCastle(bd, mode, dpiece, wh) {
   var d = mode == "short" ? 4 : 5;
   var dir = mode == "short" ? 1 : -1;
   var i;
   var s = new Array(d);
   var tbd = eval("this." + bd);
   if (wh == "w") {
-    s[0] = sqtoind("e1");
+    s[0] = sqToIndex("e1");
     tbd.kingw = s[0]; //SKAcz 2020 repairing bug in undo castling which caused bad square "checked"
   } else {
-    s[0] = sqtoind("e8");
+    s[0] = sqToIndex("e8");
     tbd.kingb = s[0]; //SKAcz 2020 repairing bug in undo castling which caused bad square "checked"
   }
   for (i = 1; i < d; i++) {
@@ -4097,7 +4000,7 @@ function undocastle(bd, mode, dpiece, wh) {
   }
 }
 
-function setenpasssq(mv) {
+function setEnPassantSq(mv) {
   if (
     mv.frompiece.charAt(1) == "p" &&
     Math.abs(mv.fromsquare - mv.tosquare) == 16
@@ -4108,12 +4011,12 @@ function setenpasssq(mv) {
   }
 }
 
-function backupmove(mv) {
+function backupMove(mv) {
   var obd = this.otherbd(mv.board);
-  mv.backuptime = whosmove(obd.turn) == "w" ? obd.wclock : obd.bclock;
+  mv.backuptime = whosMove(obd.turn) == "w" ? obd.wclock : obd.bclock;
   var bd = eval("this." + mv.board);
-  mv.backuptime1 = whosmove(bd.turn) == "w" ? bd.wclock : bd.bclock;
-  var wh = whosmove(bd.turn);
+  mv.backuptime1 = whosMove(bd.turn) == "w" ? bd.wclock : bd.bclock;
+  var wh = whosMove(bd.turn);
   if (wh == "w") {
     mv.backuplongcastle = bd.longcastlew;
     mv.backupshortcastle = bd.shortcastlew;
@@ -4125,36 +4028,36 @@ function backupmove(mv) {
   return mv;
 }
 
-function refreshclock() {
+function refreshClock() {
   var v = eval(this.viewername);
   var formm = eval("window.document." + this.viewername);
   if (v.a.flip == 1) {
-    formm.upclocka.value = totime(v.a.wclock);
-    formm.dnclocka.value = totime(v.a.bclock);
+    formm.upclocka.value = formatTime(v.a.wclock);
+    formm.dnclocka.value = formatTime(v.a.bclock);
   } else {
-    formm.upclocka.value = totime(v.a.bclock);
-    formm.dnclocka.value = totime(v.a.wclock);
+    formm.upclocka.value = formatTime(v.a.bclock);
+    formm.dnclocka.value = formatTime(v.a.wclock);
   }
   if (v.numboard != 1) {
     if (v.b.flip == 1) {
-      formm.upclockb.value = totime(v.b.wclock);
-      formm.dnclockb.value = totime(v.b.bclock);
+      formm.upclockb.value = formatTime(v.b.wclock);
+      formm.dnclockb.value = formatTime(v.b.bclock);
     } else {
-      formm.upclockb.value = totime(v.b.bclock);
-      formm.dnclockb.value = totime(v.b.wclock);
+      formm.upclockb.value = formatTime(v.b.bclock);
+      formm.dnclockb.value = formatTime(v.b.wclock);
     }
   }
 }
 
-function updateclock(viewer) {
+function updateClock(viewer) {
   var v = eval(viewer);
 
-  if (whosmove(v.a.turn) == "w") {
+  if (whosMove(v.a.turn) == "w") {
     v.a.wclock += -1;
   } else {
     v.a.bclock += -1;
   }
-  if (whosmove(v.b.turn) == "w") {
+  if (whosMove(v.b.turn) == "w") {
     v.b.wclock += -1;
   } else {
     v.b.bclock += -1;
@@ -4163,9 +4066,9 @@ function updateclock(viewer) {
   v.playtimeout = setTimeout("updateclock('" + viewer + "')", 1000);
 }
 
-function playmove(viewer) {
+function playMove(viewer) {
   var v = eval(viewer);
-  assforward(1, "c", viewer, 0);
+  analysisForward(1, "c", viewer, 0);
   if (v.BPGN[v.currentmove].nNext.length == 0) {
     clearTimeout(v.playtimeout1);
     clearTimeout(v.playtimeout);
@@ -4191,13 +4094,13 @@ function playmove(viewer) {
   );
 }
 
-function assplay(viewer) {
+function analysisPlay(viewer) {
   var v = eval(viewer);
   var ob = eval("window.document." + viewer);
   if (ob.play.value == "Play") {
     v.playtimeout = setTimeout("updateclock('" + viewer + "')", 1000);
     ob.play.value = "Stop";
-    playmove(viewer);
+    playMove(viewer);
   } else {
     clearTimeout(v.playtimeout1);
     clearTimeout(v.playtimeout);
@@ -4205,7 +4108,7 @@ function assplay(viewer) {
   }
 }
 
-function assforward(num, bd, viewer, opt) {
+function analysisForward(num, bd, viewer, opt) {
   var v = eval(viewer);
   var t;
   var f = 0;
@@ -4247,7 +4150,7 @@ function assforward(num, bd, viewer, opt) {
   v.refreshhighlight();
 }
 
-function assundomove(num, bd, viewer) {
+function analysisUndoMove(num, bd, viewer) {
   var f = 0;
   var t;
   var ind;
@@ -4277,13 +4180,13 @@ function analysis(viewer) {
   var v = eval(viewer);
 }
 
-function assexecmove(text, bd, viewer) {
+function analysisExecMove(text, bd, viewer) {
   var v = eval(viewer);
   v.execmove(bd, text);
   v.refreshhighlight();
 }
 
-function forwardmove(ind) {
+function forwardMove(ind) {
   var mv = this.BPGN[ind].dmove; //mv = decrypted move
   var res;
   var bd = mv.board;
@@ -4319,12 +4222,12 @@ function forwardmove(ind) {
   if (res == false) return false;
   this.BPGN[ind].dmove = mv;
   var out = eval("document." + this.viewername + ".lastmove" + bd);
-  out.value = this.BPGN[ind].nMove + tobpgn(this.BPGN[ind].dmove);
+  out.value = this.BPGN[ind].nMove + toBpgn(this.BPGN[ind].dmove);
   this.currentmove = ind;
   out.select();
   tbd.setenpasssq(mv);
   tbd.setking(mv);
-  if (whosmove(tbd.turn) == "w") {
+  if (whosMove(tbd.turn) == "w") {
     tdif = tbd.wclock - this.BPGN[ind].cTime;
     tbd.wclock += -tdif;
   } else {
@@ -4333,7 +4236,7 @@ function forwardmove(ind) {
   }
   if (tdif < 0) tdif = 0;
   var obd = this.otherbd(bd);
-  if (whosmove(obd.turn) == "w") {
+  if (whosMove(obd.turn) == "w") {
     obd.wclock += -tdif;
   } else {
     obd.bclock += -tdif;
@@ -4342,7 +4245,7 @@ function forwardmove(ind) {
   return true;
 }
 
-function execmove(bd, text) {
+function execMove(bd, text) {
   /* function gets board name('a' or 'b') and text move (e.g. 37. rae1) and tries to execute the move if it's legal.
 	 First it calls decryptmove which returns the move in the bugmove format( fromsquare, tosquare, frompiece, topiece).
 	 Decryptmove doesn't check legality that is king related (i.e. if king is in check and castling is valid).
@@ -4354,7 +4257,7 @@ function execmove(bd, text) {
   saveNote(this.viewername); // for some reason the comment textarea onchange doesn't call when we move a piece by hand, so we call savenote here
 
   var v = v1;
-  var move = extractmove(text);
+  var move = extractMove(text);
 
   var tbd = eval("this." + bd);
   var mv = this.decryptmove(tbd, move);
@@ -4397,7 +4300,7 @@ function execmove(bd, text) {
     this.currentmove,
     nMove,
     tbd.turn,
-    nMove + tobpgn(mv),
+    nMove + toBpgn(mv),
     cTime,
     "",
     "",
@@ -4423,7 +4326,7 @@ function execmove(bd, text) {
   this.refreshhighlight();
 }
 
-function changeturn(step1) {
+function changeTurn(step1) {
   var t = this.turn;
   if (
     (t == t.toLowerCase() && step1 > 0) ||
@@ -4439,7 +4342,7 @@ function changeturn(step1) {
   this.brefreshform();
 }
 
-function undomove() {
+function undoMove() {
   if (this.currentmove == BPGN_ROOT) {
     return;
   }
@@ -4487,12 +4390,12 @@ function undomove() {
   tbd.changeturn(-1);
   var out = eval("document." + this.viewername + ".lastmove" + bd);
   out.value = "";
-  if (whosmove(tbd.turn) == "w") {
+  if (whosMove(tbd.turn) == "w") {
     tbd.wclock = mv.backuptime1;
   } else {
     tbd.bclock = mv.backuptime1;
   }
-  if (whosmove(obd.turn) == "w") {
+  if (whosMove(obd.turn) == "w") {
     obd.wclock = mv.backuptime;
   } else {
     obd.bclock = mv.backuptime;
@@ -4501,7 +4404,7 @@ function undomove() {
   this.refreshinfo();
 }
 
-function bugorzh(viewer) {
+function bugOrZh(viewer) {
   var v = eval(viewer);
   var c;
   var out = eval("document." + v.viewername + ".bugzh");
@@ -4529,7 +4432,7 @@ function bugorzh(viewer) {
   v.capturemode = c;
 }
 
-function flipboard(viewer) {
+function flipBoard(viewer) {
   var v = eval(viewer);
   var lid, lobj, ltmp;
   if (v.reloadmode == "noreload") return;
@@ -4580,18 +4483,18 @@ function flipboard(viewer) {
   // redraw the highlights:
 
   a_highlights = [...v.a.highlightedSquares];
-  v.a.Highlight(...a_highlights);
+  v.a.bxHighlight(...a_highlights);
 
   b_highlights = [...v.b.highlightedSquares];
-  v.b.Highlight(...b_highlights);
+  v.b.bxHighlight(...b_highlights);
 
   // handle the coordinates
 
-  v.a.setCoordinates();
-  v.b.setCoordinates();
+  v.a.bxSetCoordinates();
+  v.b.bxSetCoordinates();
 }
 
-function Preferences(viewer) {
+function preferences(viewer) {
   //SKAcz
   var lviewer = eval(viewer);
   /*
@@ -4748,19 +4651,19 @@ function Preferences(viewer) {
   }
 
   //Change pieces
-  lviewer.gifs = Init1(
+  lviewer.gifs = initPieceGifs(
     lGifPath + lGifDir + "/",
     lviewer.filebg,
     lviewer.whitesq,
     lviewer.blacksq,
   );
-  lviewer.a.gifs = Init1(
+  lviewer.a.gifs = initPieceGifs(
     lGifPath + lGifDir + "/",
     lviewer.filebg,
     lviewer.whitesq,
     lviewer.blacksq,
   );
-  lviewer.b.gifs = Init1(
+  lviewer.b.gifs = initPieceGifs(
     lGifPath + lGifDir + "/",
     lviewer.filebg,
     lviewer.whitesq,
@@ -4792,7 +4695,7 @@ function hmsToSecondsOnly(str) {
   return s;
 }
 
-function TimeFormatToBpgnReplaceClkBySecs(fsBpgnGame) {
+function timeFormatToBpgnReplaceClkBySecs(fsBpgnGame) {
   var lsBody = fsBpgnGame;
   li1 = 0;
   li1 = lsBody.indexOf("{[%clk", li1);
@@ -4805,7 +4708,7 @@ function TimeFormatToBpgnReplaceClkBySecs(fsBpgnGame) {
   return lsBody;
 }
 
-function BPGNImportRepair1(fsBPGN) {
+function bpgnImportRepair1(fsBPGN) {
   var lsOut = fsBPGN;
   //Some conversions to get old good BPGN
   //lsOut=fReplaceAll(fsBPGN,'\n',' ');
@@ -4813,12 +4716,12 @@ function BPGNImportRepair1(fsBPGN) {
   lsOut = fReplaceAll(lsOut, " @", " P@");
   lsOut = fReplaceAll(lsOut, ".@", ".P@");
   //converting from Chess.com times {[%clk 0:02:59.9]} into {179.9}
-  lsOut = TimeFormatToBpgnReplaceClkBySecs(lsOut);
+  lsOut = timeFormatToBpgnReplaceClkBySecs(lsOut);
   return lsOut;
 }
 
-function setcapture(bpgntext, mode) {
-  var tmp = bpgnheader(bpgntext, "Event");
+function setCapture(bpgntext, mode) {
+  var tmp = bpgnHeader(bpgntext, "Event");
   tmp = tmp.toLowerCase();
   var pos = tmp.indexOf("bughouse");
   if (pos > -1) return "bug";
@@ -4831,21 +4734,21 @@ function setcapture(bpgntext, mode) {
   return mode == 1 ? "zh" : "bug";
 }
 
-function assreloadgame(viewer, bpgntext, bfena, bfenb) {
+function analysisReloadGame(viewer, bpgntext, bfena, bfenb) {
   var v = eval(viewer);
   window.focus();
-  v.reloadgame(BPGNImportRepair1(bpgntext), bfena, bfenb);
+  v.reloadgame(bpgnImportRepair1(bpgntext), bfena, bfenb);
   v.reloadwindow.close();
 }
 
-function assreloadgameN(viewer, bpgntext, gameord, bfena, bfenb) {
+function analysisReloadGameN(viewer, bpgntext, gameord, bfena, bfenb) {
   var v = eval(viewer);
   window.focus();
-  v.reloadgame(FromGameN(BPGNImportRepair1(bpgntext), gameord), bfena, bfenb);
+  v.reloadgame(fromGameN(bpgnImportRepair1(bpgntext), gameord), bfena, bfenb);
   v.reloadwindow.close();
 }
 
-function bpgnfindend() {
+function bpgnFindEnd() {
   var i = BPGN_ROOT;
   var n = this.BPGN.length;
   while (i < n) {
@@ -4854,7 +4757,7 @@ function bpgnfindend() {
   }
 }
 
-function reloadgame(bpgntext, bfena, bfenb) {
+function reloadGame(bpgntext, bfena, bfenb) {
   // repair to load also from wild start positions defined by BFEN 2021 SKAcz
   var lsBFEN = "";
   if (bpgntext.indexOf('[Setup "1"]') > -1)
@@ -4886,7 +4789,7 @@ function reloadgame(bpgntext, bfena, bfenb) {
   this.nlaststate = BPGN_NORMAL;
   this.ctoken = "";
 
-  this.capturemode = setcapture(bpgntext, this.numboard);
+  this.capturemode = setCapture(bpgntext, this.numboard);
   var bz;
   if (this.capturemode == "bug") {
     bz = "B=>Z";
@@ -4904,12 +4807,12 @@ function reloadgame(bpgntext, bfena, bfenb) {
   var out = eval("document." + this.viewername + ".bugzh");
   if (this.displaymode != "diagram") out.value = bz;
   tmp = this.getbpgnheaders(bpgntext);
-  this.cgame = extracttext(bpgntext);
+  this.cgame = extractText(bpgntext);
   this.ngamesize = this.cgame.length;
   n = this.BPGN.length;
   var ba = this.a.pos;
-  this.a.pos = startposition();
-  this.a.hold = emptyhold();
+  this.a.pos = startPosition();
+  this.a.hold = emptyHold();
   this.a.loadboard(
     bfena,
     this.whitea,
@@ -4918,11 +4821,11 @@ function reloadgame(bpgntext, bfena, bfenb) {
     this.blackaelo,
     this.gametime,
   );
-  bfena = killleadspace(bfena);
+  bfena = trimLeft(bfena);
   if (ba != this.a.pos) this.a.drawpos();
   var bb = this.b.pos;
-  this.b.pos = startposition();
-  this.b.hold = emptyhold();
+  this.b.pos = startPosition();
+  this.b.hold = emptyHold();
   this.b.loadboard(
     bfenb,
     this.whiteb,
@@ -4931,7 +4834,7 @@ function reloadgame(bpgntext, bfena, bfenb) {
     this.blackbelo,
     this.gametime,
   );
-  bfenb = killleadspace(bfenb);
+  bfenb = trimLeft(bfenb);
   if (this.numboard != 1 && bb != this.b.pos) {
     this.b.drawpos();
   }
@@ -4945,7 +4848,7 @@ function reloadgame(bpgntext, bfena, bfenb) {
   }
   this.Queue.length = 0;
 
-  this.BPGN[BPGN_ROOT] = new NODE();
+  this.BPGN[BPGN_ROOT] = new Node();
   this.bpgngetfirstnote();
   this.BPGN_GetBody(BPGN_ROOT, 1, 1, "A");
   this.endnode = this.bpgnfindend();
@@ -4959,7 +4862,7 @@ function reloadgame(bpgntext, bfena, bfenb) {
   this.refreshhighlight();
 }
 
-function loadboard(bfen, whitepl, blackpl, welo, belo, timecontrol) {
+function loadBoard(bfen, whitepl, blackpl, welo, belo, timecontrol) {
   var i;
   var fform = eval("window.document." + this.viewername);
   this.white = whitepl;
@@ -4971,16 +4874,16 @@ function loadboard(bfen, whitepl, blackpl, welo, belo, timecontrol) {
   this.bclock = timecontrol;
   this.getfen(bfen);
   if (this.pos.length != 64) {
-    this.pos = startposition();
-    this.hold = emptyhold();
+    this.pos = startPosition();
+    this.hold = emptyHold();
   }
-  if (this.pos[sqtoind("e1")] == "wk") {
-    if (this.pos[sqtoind("h1")] == "wr") {
+  if (this.pos[sqToIndex("e1")] == "wk") {
+    if (this.pos[sqToIndex("h1")] == "wr") {
       this.shortcastlew = true;
     } else {
       this.shortcastlew = "rook";
     }
-    if (this.pos[sqtoind("a1")] == "wr") {
+    if (this.pos[sqToIndex("a1")] == "wr") {
       this.longcastlew = true;
     } else {
       this.longcastlew = "rook";
@@ -4989,13 +4892,13 @@ function loadboard(bfen, whitepl, blackpl, welo, belo, timecontrol) {
     this.shortcastlew = "king";
     this.longcastlew = "king";
   }
-  if (this.pos[sqtoind("e8")] == "bk") {
-    if (this.pos[sqtoind("h8")] == "br") {
+  if (this.pos[sqToIndex("e8")] == "bk") {
+    if (this.pos[sqToIndex("h8")] == "br") {
       this.shortcastleb = true;
     } else {
       this.shortcastleb = "rook";
     }
-    if (this.pos[sqtoind("a8")] == "br") {
+    if (this.pos[sqToIndex("a8")] == "br") {
       this.longcastleb = true;
     } else {
       this.longcastleb = "rook";
@@ -5010,7 +4913,7 @@ function loadboard(bfen, whitepl, blackpl, welo, belo, timecontrol) {
   this.initial_bfen = this.generatebfen();
 }
 
-function asssave(viewer) {
+function analysisSave(viewer) {
   var v = eval(viewer);
   if (!v.savewindow || v.savewindow.closed) {
     v.savewindow = window.open(
@@ -5022,7 +4925,7 @@ function asssave(viewer) {
     v.savewindow.focus();
     return;
   }
-  v.savewindow.document.writeln(generatesavehtml());
+  v.savewindow.document.writeln(generateSaveHtml());
   v.BPGN_SaveGame();
   SAVE_STR = v.sgame;
   v.savewindow.document.saveform.bpgn.value = self.parent.SAVE_STR;
@@ -5035,7 +4938,7 @@ function asssave(viewer) {
   v.savewindow.focus();
 }
 
-function assloadgame(viewer) {
+function analysisLoadGame(viewer) {
   var v = eval(viewer);
   if (!v.reloadwindow || v.reloadwindow.closed) {
     v.reloadwindow = window.open(
@@ -5047,12 +4950,12 @@ function assloadgame(viewer) {
     v.reloadwindow.focus();
     return;
   }
-  v.reloadwindow.document.writeln(generateloadhtml(viewer));
+  v.reloadwindow.document.writeln(generateLoadHtml(viewer));
   v.reloadwindow.focus();
   v.refreshhighlight();
 }
 
-function drawcontrol(color, mode) {
+function drawControl(color, mode) {
   var vd = this.numboard == 1 ? this.vwidth : 2 * this.vwidth;
   var bc = 5;
 
@@ -5292,7 +5195,7 @@ function drawcontrol(color, mode) {
     t += '<td align="center" valign="top">';
 
     t +=
-      '<input type="button" value=" &lt;&lt;" onclick="assundomove(' +
+      '<input type="button" value=" &lt;&lt;" onclick="analysisUndoMove(' +
       bc +
       "," +
       "'a','" +
@@ -5300,7 +5203,7 @@ function drawcontrol(color, mode) {
       "'" +
       ')">';
     t +=
-      '<input type="button" value=" &lt; " onclick="assundomove(1,' +
+      '<input type="button" value=" &lt; " onclick="analysisUndoMove(1,' +
       "'a','" +
       this.viewername +
       "'" +
@@ -5312,13 +5215,13 @@ function drawcontrol(color, mode) {
     t += "),'_blank'" + ')">';
 
     t +=
-      '<input type="button" value=" &gt; " onclick="assforward(1,' +
+      '<input type="button" value=" &gt; " onclick="analysisForward(1,' +
       "'a','" +
       this.viewername +
       "'" +
       ',0)">';
     t +=
-      '<input type="button" value="&gt;&gt; " onclick="assforward(' +
+      '<input type="button" value="&gt;&gt; " onclick="analysisForward(' +
       bc +
       "," +
       "'a','" +
@@ -5330,31 +5233,31 @@ function drawcontrol(color, mode) {
   }
   t += '<td align="center" valign="bottom">';
   t +=
-    '<input id="undo999" type="button" value=" |< " onclick="assundomove(999,' +
+    '<input id="undo999" type="button" value=" |< " onclick="analysisUndoMove(999,' +
     "'c','" +
     this.viewername +
     "'" +
     ')">';
   t +=
-    '<input type="button" value=" &lt; " onclick="assundomove(1,' +
+    '<input type="button" value=" &lt; " onclick="analysisUndoMove(1,' +
     "'c','" +
     this.viewername +
     "'" +
     ')">';
   t +=
-    '<input type="button" name="play" value="Play" onclick="assplay(' +
+    '<input type="button" name="play" value="Play" onclick="analysisPlay(' +
     "'" +
     this.viewername +
     "'" +
     ')">';
   t +=
-    '<input type="button" value=" &gt; " onclick="assforward(1,' +
+    '<input type="button" value=" &gt; " onclick="analysisForward(1,' +
     "'c','" +
     this.viewername +
     "'" +
     ',0)">';
   t +=
-    '<input type="button" value=" >| " onclick="assforward(999,' +
+    '<input type="button" value=" >| " onclick="analysisForward(999,' +
     "'c','" +
     this.viewername +
     "'" +
@@ -5362,7 +5265,7 @@ function drawcontrol(color, mode) {
   t += "</td>";
   t += '<td align="center" valign="bottom">';
   t +=
-    '<input style="display: none;" type="button" value=" X " onclick="assdelete(' +
+    '<input style="display: none;" type="button" value=" X " onclick="analysisDelete(' +
     "'" +
     this.viewername +
     "'" +
@@ -5396,26 +5299,26 @@ function drawcontrol(color, mode) {
     "'" +
     ')">';
   t +=
-    '<input style="display: none;" type="button" id="Pref" value="Pref" onclick="Preferences(' +
+    '<input style="display: none;" type="button" id="Pref" value="Pref" onclick="preferences(' +
     "'" +
     this.viewername +
     "'" +
     ')">';
   t +=
-    '<input type="button" value="Save" onclick="asssave(' +
+    '<input type="button" value="Save" onclick="analysisSave(' +
     "'" +
     this.viewername +
     "'" +
     ')">';
   t +=
-    '<input type="button" value="Load" onclick="assloadgame(\'' +
+    '<input type="button" value="Load" onclick="analysisLoadGame(\'' +
     this.viewername +
     "')\">";
   t += "</td>";
   if (this.numboard != 1) {
     t += '<td align="center" valign="top">';
     t +=
-      '<input type="button" value=" &lt;&lt;" onclick="assundomove(' +
+      '<input type="button" value=" &lt;&lt;" onclick="analysisUndoMove(' +
       bc +
       "," +
       "'b','" +
@@ -5423,7 +5326,7 @@ function drawcontrol(color, mode) {
       "'" +
       ')">';
     t +=
-      '<input type="button" value=" &lt; " onclick="assundomove(1,' +
+      '<input type="button" value=" &lt; " onclick="analysisUndoMove(1,' +
       "'b','" +
       this.viewername +
       "'" +
@@ -5435,13 +5338,13 @@ function drawcontrol(color, mode) {
     t += "),'_blank'" + ')">';
 
     t +=
-      '<input type="button" value=" &gt; " onclick="assforward(1,' +
+      '<input type="button" value=" &gt; " onclick="analysisForward(1,' +
       "'b','" +
       this.viewername +
       "'" +
       ',0)">';
     t +=
-      '<input type="button" value="&gt;&gt; " onclick="assforward(' +
+      '<input type="button" value="&gt;&gt; " onclick="analysisForward(' +
       bc +
       "," +
       "'b','" +
@@ -5454,7 +5357,7 @@ function drawcontrol(color, mode) {
   return t;
 }
 
-function drawinfo(color) {
+function drawInfo(color) {
   var t = "";
   var ph = "";
   var opt = "";
@@ -5472,7 +5375,7 @@ function drawinfo(color) {
   t = t + "<tr>";
   t = t + '<td valign="top">';
   t +=
-    '<select name="nextmove"  size="5" onChange="assforward(1,' +
+    '<select name="nextmove"  size="5" onChange="analysisForward(1,' +
     "'c','" +
     this.viewername +
     "'" +
@@ -5497,7 +5400,7 @@ function drawinfo(color) {
   t = t + "<tr>";
   t =
     t +
-    '<td align="center" valign="top"> <a href="javascript:void(0)" onclick="assdelete(' +
+    '<td align="center" valign="top"> <a href="javascript:void(0)" onclick="analysisDelete(' +
     "'" +
     "v1" +
     "'" +
@@ -5507,36 +5410,7 @@ function drawinfo(color) {
   return t;
 }
 
-function drawdebug() {
-  var out = "";
-  out +=
-    '<a href="javascript:void(0)" onclick="toggleDebugInfo();">Show/hide debug</a>';
-  out +=
-    '<script>\
-			function toggleDebugInfo() {\
-				var x = document.getElementById("debugInfo");\
-				if (x.style.display === "block") {\
-					x.style.display = "none";\
-				} else {\
-					x.style.display = "block";\
-				}\
-			}\
-			</script>';
-  out +=
-    '<div id="debugInfo" style="\
-				display: block;  /* default visibility of the console, block or none */\
-				width: auto;\
-				padding: 10px 0px 10px 20px;\
-				text-align: left;\
-				background-color: lightgray;\
-				font-family: \'Courier New\', monospace;\
-				white-space: pre;"\
-			>Debug log:\
-			</div>';
-  return out;
-}
-
-function drawviewer(color) {
+function drawViewer(color) {
   var tmp = "";
   tmp +=
     '<table id="tabledrawviewer" border="0" cellpadding="0" bgcolor="' +
@@ -5574,7 +5448,6 @@ function drawviewer(color) {
       tmp += "<tr><td>" + this.drawinfo(color) + "</td></tr>";
     } /*drawing info */
   }
-  tmp += '<tr class="debug"><td>' + this.drawdebug() + "</td></tr>";
   tmp += "</form> </table> "; /* closing big table */
   document.writeln(tmp);
   this.setauleft();
@@ -5586,7 +5459,7 @@ function drawviewer(color) {
   }
 }
 
-function startposition() {
+function startPosition() {
   var i;
   var pos = new Array(64);
   pos[0] = "br";
@@ -5617,7 +5490,7 @@ function startposition() {
   return pos;
 }
 
-function emptyhold() {
+function emptyHold() {
   var t = new Array(10);
   var i;
   for (i = 0; i < 10; i++) {
@@ -5626,11 +5499,11 @@ function emptyhold() {
   return t;
 }
 
-function syncpic() {
+function syncPic() {
   return this.uleft;
 }
 
-function isnum(str) {
+function isNum(str) {
   var digs = "1234567890";
   var i;
   for (i = 0; i < str.length; i++) {
@@ -5641,14 +5514,14 @@ function isnum(str) {
   return true;
 }
 
-function spacesplit(str) {
+function spaceSplit(str) {
   var t = new Array();
   t.length = 0;
   var s = true;
   var i;
   var j = 0;
   do {
-    str = killleadspace(str);
+    str = trimLeft(str);
     if (str.length == 0) return t;
     i = str.indexOf(" ");
     if (i < 0) {
@@ -5661,7 +5534,7 @@ function spacesplit(str) {
   } while (s);
 }
 
-function piecetoind(piece) {
+function pieceToIdx(piece) {
   var i = 0;
   for (i = 0; i < 10; i++) {
     if (this.dropbar[i] == piece) return i;
@@ -5669,7 +5542,7 @@ function piecetoind(piece) {
   return -1;
 }
 
-function tocol(ch) {
+function toCol(ch) {
   var pieces = "rnbqkp";
   var t = ch.toLowerCase();
   if (pieces.lastIndexOf(t) >= 0) {
@@ -5677,17 +5550,17 @@ function tocol(ch) {
   } else return "";
 }
 
-function othercolor(color) {
+function oppositeColor(color) {
   return color == "w" ? "b" : "w";
 }
 
-function otherbd(bd) {
+function otherBoard(bd) {
   return bd == "a" ? this.b : this.a;
 }
 
-function extractmove(text) {
-  var t = killleadspace(killtailspace(text));
-  t = spacesplit(text);
+function extractMove(text) {
+  var t = trimLeft(trimRight(text));
+  t = spaceSplit(text);
   if (t.length == 0) return "";
   var mv = t[t.length - 1];
   if (mv.length == 0) return "";
@@ -5713,7 +5586,7 @@ function capture(bd, piece, num) {
   }
   if (this.capturemode == "zh") {
     cbd = eval("this." + bd);
-    piece = othercolor(piece.charAt(0)) + piece.charAt(1);
+    piece = oppositeColor(piece.charAt(0)) + piece.charAt(1);
   } else {
     cbd = this.otherbd(bd);
   }
@@ -5747,7 +5620,7 @@ function explosion(ind) {
   }
 }
 
-function redrawsquare(i) {
+function redrawSquare(i) {
   if (!this.redraw) return;
   var ind = this.syncpic();
   var st = this.pos[i].toLowerCase() + "d";
@@ -5758,10 +5631,10 @@ function redrawsquare(i) {
   }
 }
 
-function getfen(fen) {
+function getFen(fen) {
   var u;
   var bd = this.boardname;
-  var t = spacesplit(fen);
+  var t = spaceSplit(fen);
   var l = t.length;
   if (l == 0) return;
   var s;
@@ -5769,12 +5642,12 @@ function getfen(fen) {
   var j;
   var k;
   var h;
-  var hold = emptyhold();
+  var hold = emptyHold();
   var pos = new Array(64);
-  if (l > 0 && isnum(t[l - 1])) {
+  if (l > 0 && isNum(t[l - 1])) {
     this.bclock = Number(t[l - 1]);
   } //202104 Number by SKAcz
-  if (l > 1 && isnum(t[l - 2])) {
+  if (l > 1 && isNum(t[l - 2])) {
     this.wclock = Number(t[l - 2]);
   }
   if (l > 1 && t[1] == "w") {
@@ -5788,7 +5661,7 @@ function getfen(fen) {
   if (l > 9 || l < 8) return;
   if (l == 9) {
     for (i = 0; i < t[8].length; i++) {
-      s = tocol(t[8].charAt(i));
+      s = toCol(t[8].charAt(i));
       j = this.piecetoind(s);
       if (j != -1) hold[j]++;
     }
@@ -5799,7 +5672,7 @@ function getfen(fen) {
     //if (l>8) return;
     for (j = 0; j < l; j++) {
       s = t[i].charAt(j);
-      if (isnum(s)) {
+      if (isNum(s)) {
         m = parseInt(s);
         if (m > 8) return;
         for (h = 0; h < m; h++) {
@@ -5812,7 +5685,7 @@ function getfen(fen) {
           u = pos[k - 1].charAt(0);
           pos[k - 1] = u + s.toUpperCase();
         } else {
-          s = tocol(t[i].charAt(j));
+          s = toCol(t[i].charAt(j));
           if (s != "") {
             pos[k] = s;
             k++;
@@ -5826,7 +5699,7 @@ function getfen(fen) {
   this.hold = hold;
 }
 
-function findpiece(piece, ind) {
+function findPiece(piece, ind) {
   var i;
   for (i = ind; i < 64; i++) {
     if (this.pos[i] == piece) {
@@ -5888,45 +5761,45 @@ function board(
   this.needredraw = true;
 
   this.syncpic =
-    syncpic; /* returns the index of the upper left corner of board one in array document.images[]. In fact returns this.uleft */
+    syncPic; /* returns the index of the upper left corner of board one in array document.images[]. In fact returns this.uleft */
 
-  this.getfen = getfen;
-  this.brefreshform = brefreshform;
-  this.drawpos = drawpos;
-  this.drawhold = drawhold;
-  this.piecetoind = piecetoind;
-  this.drawboard = drawboard;
-  this.isempty = isempty;
-  this.incheck = incheck;
-  this.inchecks = inchecks; //New201801
-  this.legalmove = legalmove;
-  this.legalmovechecking = legalmovechecking; //New201801
-  this.findmove = findmove;
-  this.redrawsquare = redrawsquare;
-  this.redrawhold = redrawhold;
-  this.enpassantvalid = enpassantvalid;
-  this.setenpasssq = setenpasssq;
-  this.shortcastle = shortcastle;
-  this.longcastle = longcastle;
-  this.setking = setking;
-  this.dropmove = dropmove;
-  this.undodropmove = undodropmove;
-  this.findpiece = findpiece;
-  this.changeturn = changeturn;
-  this.loadboard = loadboard;
-  this.generatebfen = generatebfen;
-  this.generateRTFTextPosition = generateRTFTextPosition;
+  this.getfen = getFen;
+  this.brefreshform = bRefreshForm;
+  this.drawpos = drawPos;
+  this.drawhold = drawHold;
+  this.piecetoind = pieceToIdx;
+  this.drawboard = drawBoard;
+  this.isempty = isEmpty;
+  this.incheck = inCheck;
+  this.inchecks = inChecks;
+  this.legalmove = legalMove;
+  this.legalmovechecking = legalMoveChecking; //New201801
+  this.findmove = findMove;
+  this.redrawsquare = redrawSquare;
+  this.redrawhold = redrawHold;
+  this.enpassantvalid = enPassantValid;
+  this.setenpasssq = setEnPassantSq;
+  this.shortcastle = shortCastle;
+  this.longcastle = longCastle;
+  this.setking = setKing;
+  this.dropmove = dropMove;
+  this.undodropmove = undoDropMove;
+  this.findpiece = findPiece;
+  this.changeturn = changeTurn;
+  this.loadboard = loadBoard;
+  this.generatebfen = generateBfen;
+  this.generateRTFTextPosition = generateRtfTextPosition;
 
   this.loadboard(bfen, whitepl, blackpl, welo, belo, timecontrol);
 
-  this.Highlight = Highlight;
-  this.unHighlightAll = unHighlightAll;
+  this.bxHighlight = bxHighlight;
+  this.bxUnhighlightAll = bxUnhighlightAll;
   this.highlightedSquares = [];
 
-  this.setCoordinates = setCoordinates;
+  this.bxSetCoordinates = bxSetCoordinates;
 }
 
-function setmoven() {
+function setMoveN() {
   var n = this.BPGN.length;
   var i;
   var fa = false;
@@ -6033,10 +5906,10 @@ function game(
     this.capturemode != "zh" &&
     this.capturemode != "chess"
   ) {
-    this.capturemode = setcapture(bpgntext, this.numboard);
+    this.capturemode = setCapture(bpgntext, this.numboard);
   }
 
-  this.gifs = Init1(
+  this.gifs = initPieceGifs(
     gif_file_path,
     filebg,
     this.whitesq,
@@ -6084,7 +5957,7 @@ function game(
   this.cResult1 = "";
   this.cResult2 = "";
   this.BPGN = new Array();
-  this.BPGN[BPGN_ROOT] = new NODE();
+  this.BPGN[BPGN_ROOT] = new Node();
   // initialize token queue
   this.Queue = new Array();
   this.afirstmove = false;
@@ -6097,67 +5970,66 @@ function game(
   this.nstate = BPGN_NORMAL;
   this.nlaststate = BPGN_NORMAL;
   this.ctoken = "";
-  this.gettoken = gettoken;
+  this.gettoken = getToken;
 
   //savegame functions
-  this.BPGN_SaveMove = BPGN_SaveMove;
-  this.BPGN_SaveTime = BPGN_SaveTime;
-  this.BPGN_SaveAnno = BPGN_SaveAnno;
-  this.BPGN_SaveNote = BPGN_SaveNote;
-  this.BPGN_SaveBody = BPGN_SaveBody;
-  this.BPGN_SaveGame = BPGN_SaveGame;
+  this.BPGN_SaveMove = bpgnSaveMove;
+  this.BPGN_SaveTime = bpgnSaveTime;
+  this.BPGN_SaveAnno = bpgnSaveAnno;
+  this.BPGN_SaveNote = bpgnSaveNote;
+  this.BPGN_SaveBody = bpgnSaveBody;
+  this.BPGN_SaveGame = bpgnSaveGame;
 
   //f3 functions
   this.getbpgnheaders =
-    getbpgnheaders; /* method that initializes above properties from the bpgn header. Returns true */
-  this.BPGN_GetNewNode = BPGN_GetNewNode; // BPGN get new node
-  this.BPGN_QueueIsEmpty = BPGN_QueueIsEmpty; // BPGN is token queue empty?
-  this.BPGN_InsertQueue = BPGN_InsertQueue; // BPGN insert into token queue
-  this.BPGN_RemoveQueue = BPGN_RemoveQueue; // BPGN remove from token queue
-  this.gettoken = gettoken; // BPGN token parsing
-  this.bpgnisnote = bpgnisnote; // BPGN is current token a note?
-  this.bpgnisannotation = bpgnisannotation; // BPGN is current token an annotation?
-  this.bpgnislag = bpgnislag; // BPGN is current token an annotation?
-  this.bpgngetmove = bpgngetmove; // BPGN get move
-  this.bpgngettime = bpgngettime; // BPGN get time
-  this.bpgngetresult = bpgngetresult; // BPGN get result
-  this.bpgngetnote = bpgngetnote; // BPGN get note or annotation
-  this.bpgngetfirstnote = bpgngetfirstnote; // BPGN first note retrieval
-  this.BPGN_GetBody = BPGN_GetBody; // BPGN get body
-  this.bpgnfindend = bpgnfindend; // returns the index of last note of main line
-  this.BPGN_DeleteCurrentMove = BPGN_DeleteCurrentMove;
-  this.stuffnode = stuffnode;
+    getBpgnHeaders; /* method that initializes above properties from the bpgn header. Returns true */
+  this.BPGN_GetNewNode = bpgnGetNewNode; // BPGN get new node
+  this.BPGN_QueueisEmpty = bpgnQueueIsEmpty; // BPGN is token queue empty?
+  this.BPGN_InsertQueue = bpgnInsertQueue; // BPGN insert into token queue
+  this.BPGN_RemoveQueue = bpgnRemoveQueue; // BPGN remove from token queue
+  this.gettoken = getToken; // BPGN token parsing
+  this.bpgnisnote = bpgnIsNote; // BPGN is current token a note?
+  this.bpgnisannotation = bpgnIsAnnotation; // BPGN is current token an annotation?
+  this.bpgnislag = bpgnIsLag; // BPGN is current token an annotation?
+  this.bpgngetmove = bpgnGetMove; // BPGN get move
+  this.bpgngettime = bpgnGetTime; // BPGN get time
+  this.bpgngetresult = bpgnGetResult; // BPGN get result
+  this.bpgngetnote = bpgnGetNote; // BPGN get note or annotation
+  this.bpgngetfirstnote = bpgnGetFirstNote; // BPGN first note retrieval
+  this.BPGN_GetBody = bpgnGetBody; // BPGN get body
+  this.bpgnfindend = bpgnFindEnd; // returns the index of last note of main line
+  this.BPGN_DeleteCurrentMove = bpgnDeleteCurrentMove;
+  this.stuffnode = stuffNode;
 
   // draw functions
   this.drawviewer =
-    drawviewer; /* method that generates html to display the viewer */
-  this.setauleft = setauleft;
-  this.drawinfo = drawinfo;
-  this.drawdebug = drawdebug;
-  this.drawcontrol = drawcontrol;
-  this.otherbd = otherbd;
-  this.execmove = execmove;
-  this.decryptmove = decryptmove;
+    drawViewer; /* method that generates html to display the viewer */
+  this.setauleft = setAULeft;
+  this.drawinfo = drawInfo;
+  this.drawcontrol = drawControl;
+  this.otherbd = otherBoard;
+  this.execmove = execMove;
+  this.decryptmove = decryptMove;
   this.castle = castle;
-  this.undocastle = undocastle;
+  this.undocastle = undoCastle;
   this.capture = capture;
-  this.enpassant = enpassant;
-  this.undoenpassant = undoenpassant;
+  this.enpassant = enPassant;
+  this.undoenpassant = undoEnPassant;
   this.promotion = promotion;
-  this.undopromotion = undopromotion;
-  this.regularmove = regularmove;
-  this.undoregularmove = undoregularmove;
-  this.backupmove = backupmove;
-  this.undomove = undomove;
-  this.forwardmove = forwardmove;
-  this.mup = mup;
-  this.mdown = mdown;
-  this.getpromotion = getpromotion;
-  this.promdialog = promdialog;
-  this.reloadgame = reloadgame;
-  this.refreshclock = refreshclock;
-  this.refreshinfo = refreshinfo;
-  this.refreshhighlight = refreshhighlight;
+  this.undopromotion = undoPromotion;
+  this.regularmove = regularMove;
+  this.undoregularmove = undoRegularMove;
+  this.backupmove = backupMove;
+  this.undomove = undoMove;
+  this.forwardmove = forwardMove;
+  this.mup = mUp;
+  this.mdown = mDown;
+  this.getpromotion = getPromotion;
+  this.promdialog = promotionDialog;
+  this.reloadgame = reloadGame;
+  this.refreshclock = refreshClock;
+  this.refreshinfo = refreshInfo;
+  this.refreshhighlight = refreshHighlight;
 
   if (bpgntext.charAt(0) != "@") {
     tmp = this.getbpgnheaders(bpgntext);
@@ -6167,10 +6039,10 @@ function game(
     this.blacka = tmp;
     this.whiteb = tmp;
     this.blackb = tmp;
-    readfile(this.viewername, bpgntext.substr(1));
+    readFile(this.viewername, bpgntext.substr(1));
   }
 
-  this.cgame = extracttext(bpgntext);
+  this.cgame = extractText(bpgntext);
   this.ngamesize = this.cgame.length;
   this.bpgngetfirstnote();
   this.BPGN_GetBody(BPGN_ROOT, 1, 1, "A");
@@ -6217,7 +6089,7 @@ function game(
     redrawmode,
   );
 
-  this.setmoven = setmoven;
+  this.setmoven = setMoveN;
   this.currentmove = BPGN_ROOT;
   this.setmoven();
   this.drawviewer(bg_color);
